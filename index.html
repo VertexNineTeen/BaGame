@@ -24,9 +24,11 @@ body {
 .us b { color: #7fd6ff; }
 .them b { color: #ff9f8a; }
 .them { text-align: right; }
-#mid { text-align: center; }
-#trump { display: inline-block; font-size: 24px; line-height: 1; }
-#rounds { font-size: 11px; opacity: .8; }
+#mid { text-align: center; line-height: 1.25; }
+#trump { display: inline-flex; align-items: center; justify-content: center; height: 28px; font-size: 24px; }
+#trump .mini { width: 20px; height: 28px; border-radius: 3px; font-size: 11px; display: flex;
+  align-items: center; justify-content: center; }
+#tlabel, #rounds { font-size: 11px; opacity: .8; }
 
 /* ---------- Table ---------- */
 #table { position: relative; flex: 1; min-height: 300px; }
@@ -56,6 +58,10 @@ body {
 .backs .back { position: absolute; left: 11px; top: 2px; width: 22px; height: 31px; border-radius: 3px;
   transform-origin: 50% 100%; }
 
+/* "Show trump" button */
+#reveal { position: absolute; right: 6px; bottom: 6px; margin: 0; padding: 9px 14px; font-size: 13px;
+  border-radius: 10px; display: none; }
+
 /* ---------- Picking the dealer ---------- */
 #spread { position: absolute; left: 50%; top: 45%; width: 216px; height: 148px;
   margin: -74px 0 0 -108px; display: none; z-index: 3; }
@@ -68,10 +74,13 @@ body {
 #d2 { top: 14px; left: calc(50% + 52px); }
 #d3 { right: 16px; top: calc(45% + 42px); }
 
-/* Deck in the middle while dealing */
-#deck { position: absolute; left: 50%; top: 45%; width: 30px; height: 42px; margin: -21px 0 0 -15px;
-  display: none; }
+/* Deck sits in front of whoever is dealing */
+#deck { position: absolute; width: 30px; height: 42px; display: none; z-index: 4; }
 #deck .back { position: absolute; inset: 0; border-radius: 3px; }
+#deck.at0 { left: calc(50% - 15px); bottom: 30px; }
+#deck.at1 { left: 92px; top: calc(45% - 21px); }
+#deck.at2 { left: calc(50% - 15px); top: 104px; }
+#deck.at3 { right: 92px; top: calc(45% - 21px); }
 .flyer { position: fixed; left: 0; top: 0; width: 30px; height: 42px; border-radius: 3px;
   z-index: 8; pointer-events: none; }
 
@@ -108,9 +117,6 @@ body {
 .card.face .pip span { font-family: Georgia, 'Times New Roman', serif; font-weight: 700; font-size: .72em;
   padding: .08em .28em; border-radius: 4px; border: 1.5px solid currentColor; background: #eef2fb; }
 .card.face.red .pip span { background: #fdecec; }
-.card.ten { background: linear-gradient(160deg, #fffbe6 0%, #ffe8a3 100%);
-  box-shadow: 0 2px 6px rgba(0,0,0,.45), inset 0 0 0 2px #d9a400; }
-.card.ten::after { content: '★'; position: absolute; top: .15em; right: .3em; font-size: .6em; color: #d9a400; }
 
 /* Card back pattern */
 .back { background: repeating-linear-gradient(45deg, #9b1c2e 0 4px, #7a1323 4px 8px);
@@ -147,7 +153,7 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
 
 <div id="bar">
   <div class="team us"><b>Your team</b><br>10s: <span id="t0">0</span> · Tricks: <span id="k0">0</span></div>
-  <div id="mid"><div id="trump">–</div><div id="rounds">Trump</div></div>
+  <div id="mid"><div id="trump">–</div><div id="tlabel">Trump</div><div id="rounds">Rounds 0–0</div></div>
   <div class="team them"><b>Opponents</b><br>10s: <span id="t1">0</span> · Tricks: <span id="k1">0</span></div>
 </div>
 
@@ -165,6 +171,7 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
   <div id="trick"></div>
   <div id="banner"></div>
   <div id="msg"></div>
+  <button id="reveal" onclick="askTrump()">Show trump</button>
 </div>
 
 <div id="hand"></div>
@@ -175,9 +182,10 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
     <p>You and your <b>Partner</b> (top) play against <b>Left</b> and <b>Right</b>.</p>
     <ul>
       <li>Everyone picks a card from the deck. The <b>lowest card deals</b>.</li>
+      <li>The player next to the dealer gets 5 cards first and secretly <b>hides one</b>. Its suit is the <b>trump</b>.</li>
       <li>Capture tricks that contain the <b>10s</b>.</li>
-      <li>You must follow the suit that was led if you can.</li>
-      <li>The first time someone can't follow suit, the card they play sets the <b>trump</b> suit.</li>
+      <li>Follow the suit that was led if you can. Nobody stops you, but if you're <b>caught</b> breaking it, your team loses the round.</li>
+      <li>Can't follow suit? Tap <b>Show trump</b> to reveal it.</li>
       <li>Highest trump wins, otherwise highest card of the led suit.</li>
       <li>3 or 4 tens wins the round. At 2–2, the team with 7+ tricks wins.</li>
     </ul>
@@ -195,7 +203,10 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 // Seats go clockwise: 0 You (bottom) → 1 Left → 2 Partner (top) → 3 Right
 
 let hands = [[], [], [], []], trick = [], turn = -1, trump = null, tens = [0, 0], tricks = [0, 0];
-let dealer = -1, match = [0, 0], fresh = null, pickResolve = null;
+let dealer = -1, match = [0, 0], fresh = null, phase = '';
+let hidden = null, chooser = -1;   // the face-down trump card and who hid it
+let renege = [];                   // suits you didn't follow while you still had them
+let pickResolve = null, hideResolve = null;
 
 function newDeck() {
   const d = [];
@@ -211,9 +222,21 @@ function sortHand() {
   hands[0].sort((a, b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || b.r - a.r);
 }
 
+// A face-down card flying between two spots on screen
+function flyBack(a, b, ms = 350) {
+  const el = document.createElement('div');
+  el.className = 'back flyer';
+  document.body.appendChild(el);
+  return el.animate([
+    { transform: `translate(${a.left + a.width / 2 - 15}px, ${a.top + a.height / 2 - 21}px)` },
+    { transform: `translate(${b.left + b.width / 2 - 15}px, ${b.top + b.height / 2 - 21}px) rotate(${Math.random() * 60 - 30}deg)` }
+  ], { duration: ms, easing: 'ease-out' }).finished.then(() => el.remove());
+}
+
 // ---------- Picking the dealer ----------
 async function startGame() {
   $('over').classList.add('hide');
+  phase = 'pick';
   render();
 
   // Spread all 52 cards face down in the middle
@@ -297,44 +320,109 @@ function showDrawn(p, backEl) {
 async function startRound() {
   $('over').classList.add('hide');
   hands = [[], [], [], []]; trick = []; trump = null; tens = [0, 0]; tricks = [0, 0]; turn = -1;
+  hidden = null; renege = []; phase = 'deal';
+  chooser = (dealer + 1) % 4;
   $('trick').innerHTML = '';
+  for (let p = 0; p < 4; p++) $('s' + p).classList.toggle('active', p === dealer);
+  $('deck').className = 'at' + dealer;
+  $('deck').style.display = 'block';
   render();
   say(NAMES[dealer] + (dealer ? ' is dealing...' : ' are dealing...'));
-  $('deck').style.display = 'block';
+  await wait(500);
 
-  // 5 cards each going clockwise from the dealer (dealer last), then 1 at a time up to 13
   const deck = newDeck();
-  const order = [1, 2, 3, 4].map(i => (dealer + i) % 4);
-  for (const p of order) {
-    for (let k = 0; k < 5; k++) { giveCard(p, deck.pop()); await wait(70); }
-    await wait(250);
-  }
+  const order = [1, 2, 3, 4].map(i => (dealer + i) % 4);   // clockwise, dealer last
+
+  // 5 cards to the first player, who hides a trump before anyone else gets cards
+  await giveFive(order[0], deck);
+  await chooseHidden();
+  for (const p of order.slice(1)) await giveFive(p, deck);
+
+  // Then 1 card at a time until everyone has 13
   while (deck.length) {
     for (const p of order) { giveCard(p, deck.pop()); await wait(100); }
   }
   await wait(600);
   $('deck').style.display = 'none';
+  $('s' + dealer).classList.remove('active');
 
-  turn = (dealer + 1) % 4;
+  phase = 'play';
+  turn = chooser;
   say(NAMES[turn] + (turn ? ' leads first' : ' lead first'));
   next();
 }
 
+async function giveFive(p, deck) {
+  for (let k = 0; k < 5; k++) { giveCard(p, deck.pop()); await wait(80); }
+  await wait(450);
+}
+
 function giveCard(p, c) {
-  const a = $('deck').getBoundingClientRect();
-  const b = (p === 0 ? $('hand') : $('s' + p)).getBoundingClientRect();
-  const el = document.createElement('div');
-  el.className = 'back flyer';
-  document.body.appendChild(el);
-  el.animate([
-    { transform: `translate(${a.left}px, ${a.top}px)` },
-    { transform: `translate(${b.left + b.width / 2 - 15}px, ${b.top + b.height / 2 - 21}px) rotate(${Math.random() * 60 - 30}deg)` }
-  ], { duration: 350, easing: 'ease-out' }).finished.then(() => {
-    el.remove();
+  const to = p === 0 ? $('hand') : $('s' + p);
+  $('deck').animate([{ transform: 'translateY(-3px)' }, { transform: 'none' }], { duration: 120 });
+  flyBack($('deck').getBoundingClientRect(), to.getBoundingClientRect()).then(() => {
     hands[p].push(c);
     if (p === 0) { sortHand(); fresh = c; }
     render();
   });
+}
+
+// The first player looks at their 5 cards and hides one face down as trump
+async function chooseHidden() {
+  const p = chooser;
+  $('s' + dealer).classList.remove('active');
+  $('s' + p).classList.add('active');
+  let c, from;
+  if (p === 0) {
+    phase = 'hide';
+    say('Tap 1 card to hide as trump');
+    banner('Choose your hidden trump', 1500);
+    [c, from] = await new Promise(r => hideResolve = r);
+    hideResolve = null;
+    phase = 'deal';
+  } else {
+    say(NAMES[p] + ' is choosing a hidden trump...');
+    await wait(1300);
+    c = aiHide(p);
+    from = $('s' + p);
+  }
+  const src = from.getBoundingClientRect();
+  hands[p].splice(hands[p].indexOf(c), 1);
+  hidden = c;
+  render();
+  await flyBack(src, $('trump').getBoundingClientRect(), 500);
+  $('trump').animate([{ transform: 'scale(1.6)' }, { transform: 'none' }], { duration: 400 });
+  say(NAMES[p] + ' hid the trump card');
+  await wait(700);
+  $('s' + p).classList.remove('active');
+  $('s' + dealer).classList.add('active');
+}
+
+// Computer hides a low card from its longest suit
+function aiHide(p) {
+  const h = hands[p];
+  const count = s => h.filter(c => c.s === s).length;
+  const suit = SUITS.filter(count).sort((a, b) => count(b) - count(a))[0];
+  return cheapest(notTen(h.filter(c => c.s === suit)));
+}
+
+// Turn the hidden trump face up; it goes back to the player who hid it
+function reveal() {
+  trump = hidden.s;
+  hands[chooser].push(hidden);
+  if (chooser === 0) { sortHand(); fresh = hidden; }
+  say(NAMES[chooser] + "'s hidden card: " + rankName(hidden.r) + hidden.s);
+  hidden = null;
+  announceTrump();
+  render();
+}
+
+// You tap "Show trump"
+function askTrump() {
+  if (turn !== 0 || !hidden || !trick.length) return;
+  const led = trick[0].c.s;
+  if (hands[0].some(c => c.s === led) && !renege.includes(led)) renege.push(led);
+  reveal();
 }
 
 // ---------- Rules ----------
@@ -359,12 +447,16 @@ function winnerIdx() {
 // ---------- Playing ----------
 function play(p, c, from) {
   const src = (from || $('s' + p)).getBoundingClientRect();
-  hands[p].splice(hands[p].indexOf(c), 1);
-  if (trick.length && !trump && c.s !== trick[0].c.s) {
-    trump = c.s;
-    say(NAMES[p] + ' set trump: ' + c.s);
-    announceTrump();
+
+  // You played a suit you skipped earlier: that proves you had it
+  const caught = p === 0 && renege.includes(c.s);
+  // You didn't follow suit even though you could
+  if (p === 0 && trick.length) {
+    const led = trick[0].c.s;
+    if (c.s !== led && hands[0].some(x => x.s === led) && !renege.includes(led)) renege.push(led);
   }
+
+  hands[p].splice(hands[p].indexOf(c), 1);
   trick.push({ p, c });
 
   // Fly the card from the player to the table
@@ -380,6 +472,15 @@ function play(p, c, from) {
     { transform: 'none', opacity: 1 }
   ], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
 
+  if (caught) {
+    turn = -1;
+    render();
+    say('Caught! You had ' + c.s + ' when you didn\'t follow suit');
+    banner('🚨 Caught! 🚨', 1800);
+    setTimeout(() => endRound(1, 'You were caught not following suit (' + c.s + ').'), 2000);
+    return;
+  }
+
   if (trick.length === 4) {
     turn = -1;
     render();
@@ -391,8 +492,10 @@ function play(p, c, from) {
 }
 
 function next() {
+  // The player who hid the trump has run out of other cards: it comes back to them
+  if (hidden && turn === chooser && hands[turn].length === 0) reveal();
   render();
-  if (turn > 0) setTimeout(() => play(turn, aiChoose(turn)), 750);
+  if (turn > 0) setTimeout(() => { if (turn > 0) play(turn, aiChoose(turn)); }, 750);
 }
 
 async function endTrick() {
@@ -425,16 +528,19 @@ async function endTrick() {
   pop($('k' + team(w)));
   if (n10) pop($('t' + team(w)));
 
-  if (hands[0].length === 0) setTimeout(endRound, 600);
+  if (hands.every(h => h.length === 0) && !hidden) setTimeout(endRound, 600);
   else next();
 }
 
-function endRound() {
-  const win = tens[0] >= 3 ? 0 : tens[1] >= 3 ? 1 : tricks[0] >= 7 ? 0 : 1;
+function endRound(forced, note) {
+  phase = '';
+  turn = -1;
+  const win = forced !== undefined ? forced
+            : tens[0] >= 3 ? 0 : tens[1] >= 3 ? 1 : tricks[0] >= 7 ? 0 : 1;
   match[win]++;
-  let extra = '';
-  if (tricks[win] === 13) extra = '🏆 Whitewash: all 13 tricks!';
-  else if (tens[win] === 4) extra = '🔥 Mendikot: all four 10s!';
+  let extra = note || '';
+  if (!note && tricks[win] === 13) extra = '🏆 Whitewash: all 13 tricks!';
+  else if (!note && tens[win] === 4) extra = '🔥 Mendikot: all four 10s!';
   $('box').innerHTML =
     '<h2>' + (win === 0 ? 'Your team wins! 🎉' : 'Opponents win 😬') + '</h2>' +
     (extra ? '<p class="big"><b>' + extra + '</b></p>' : '') +
@@ -451,15 +557,10 @@ function nextRound() {
   startRound();
 }
 
-// You tap a card
+// You tap a card in your hand
 function tap(c, el) {
-  if (turn !== 0) return;
-  if (!legal(0).includes(c)) {
-    say('You must follow suit ' + trick[0].c.s);
-    el.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }],
-               { duration: 250, iterations: 2 });
-    return;
-  }
+  if (phase === 'hide' && hideResolve) return hideResolve([c, el]);
+  if (phase !== 'play' || turn !== 0) return;
   play(0, c, el);
 }
 
@@ -470,6 +571,8 @@ const cheapest = arr => arr.reduce((a, b) => cost(b) < cost(a) ? b : a);
 const notTen = arr => { const f = arr.filter(c => c.r !== 10); return f.length ? f : arr; };
 
 function aiChoose(p) {
+  // Can't follow suit and trump is still hidden: ask for it
+  if (trick.length && hidden && !hands[p].some(c => c.s === trick[0].c.s)) reveal();
   const L = legal(p);
 
   // Leading: cash an ace, otherwise lead something low
@@ -478,12 +581,10 @@ function aiChoose(p) {
     return ace || cheapest(notTen(L));
   }
 
-  const led = trick[0].c.s;
   const best = trick[winnerIdx()];
   const last = trick.length === 3;
   const hasTen = trick.some(x => x.c.r === 10);
-  // Would this card win right now? (an off-suit card sets trump if none yet)
-  const wins = c => beats(c, best.c, trump || (c.s !== led ? c.s : null));
+  const wins = c => beats(c, best.c, trump);
 
   // Partner is winning safely: feed them a 10 if we can
   if (team(best.p) === team(p)) {
@@ -497,12 +598,6 @@ function aiChoose(p) {
   const winners = L.filter(wins);
   if (winners.length && (last || hasTen || trick.length === 2)) {
     if (last) { const t = winners.find(c => c.r === 10); if (t) return t; }
-    // No trump yet and we're void: pick our longest suit to become trump
-    if (!trump && winners[0].s !== led) {
-      const count = s => hands[p].filter(c => c.s === s).length;
-      const suit = SUITS.filter(s => count(s)).sort((a, b) => count(b) - count(a))[0];
-      return cheapest(hands[p].filter(c => c.s === suit));
-    }
     return cheapest(winners);
   }
   return cheapest(notTen(L));
@@ -513,7 +608,7 @@ function cardEl(c) {
   const R = rankName(c.r), face = c.r > 10 && c.r < 14;
   const el = document.createElement('div');
   el.className = 'card' + (c.s === '♥' || c.s === '♦' ? ' red' : '') +
-    (c.r === 10 ? ' ten' : '') + (face ? ' face' : '') + (c.r === 14 ? ' ace' : '');
+    (face ? ' face' : '') + (c.r === 14 ? ' ace' : '');
   const corner = '<b>' + R + '</b><i>' + c.s + '</i>';
   el.innerHTML =
     '<div class="c tl">' + corner + '</div>' +
@@ -551,13 +646,25 @@ function announceTrump() {
 
 function render() {
   for (const t of [0, 1]) { $('t' + t).textContent = tens[t]; $('k' + t).textContent = tricks[t]; }
-  $('trump').textContent = trump || '–';
+
+  // Trump: shown, hidden (face-down card), or not chosen yet
+  if (trump) {
+    $('trump').textContent = trump;
+    $('tlabel').textContent = 'Trump';
+  } else if (hidden) {
+    // Only the player who hid it knows the suit
+    $('trump').innerHTML = '<div class="mini back">' + (chooser === 0 ? hidden.s : '') + '</div>';
+    $('tlabel').textContent = 'Hidden by ' + NAMES[chooser];
+  } else {
+    $('trump').textContent = '–';
+    $('tlabel').textContent = 'Trump';
+  }
   $('trump').style.color = trump === '♥' || trump === '♦' ? '#ff6b6b' : '#fff';
-  $('rounds').textContent = 'Trump · ' + match[0] + '–' + match[1];
+  $('rounds').textContent = 'Rounds ' + match[0] + '–' + match[1];
 
   for (let p = 0; p < 4; p++) {
     $('s' + p).classList.toggle('dealer', p === dealer);
-    if (turn >= 0) $('s' + p).classList.toggle('active', turn === p);
+    if (phase === 'play') $('s' + p).classList.toggle('active', turn === p);
   }
   for (const p of [1, 2, 3]) {
     const n = hands[p].length, show = Math.min(n, 5);
@@ -568,6 +675,8 @@ function render() {
     }
     $('b' + p).innerHTML = backs;
   }
+
+  $('reveal').style.display = phase === 'play' && turn === 0 && hidden && trick.length ? 'block' : 'none';
 
   const hand = $('hand');
   hand.innerHTML = '';
