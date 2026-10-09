@@ -29,7 +29,7 @@ body {
 #rounds { font-size: 11px; opacity: .8; }
 
 /* ---------- Table ---------- */
-#table { position: relative; flex: 1; min-height: 260px; }
+#table { position: relative; flex: 1; min-height: 300px; }
 #table::before { content: ''; position: absolute; left: 50%; top: 45%; width: 250px; height: 210px;
   transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid rgba(255,255,255,.08);
   background: radial-gradient(rgba(255,255,255,.06), transparent 70%); }
@@ -38,18 +38,42 @@ body {
   border-radius: 12px; background: rgba(0,0,0,.3); border: 2px solid transparent; }
 .seat.active { border-color: #ffd54a; animation: glow 1.2s ease-in-out infinite; }
 @keyframes glow { 50% { box-shadow: 0 0 16px #ffd54a; } }
+.seat.dealer::after { content: 'D'; position: absolute; top: -9px; right: -9px; width: 20px; height: 20px;
+  border-radius: 50%; background: #ffd54a; color: #222; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .seat .name { font-weight: 700; }
 .seat .n { font-size: 11px; opacity: .8; }
+#s0 { left: 6px; bottom: 6px; }
 #s1 { left: 6px; top: 45%; transform: translateY(-50%); }
 #s2 { top: 8px; left: 50%; transform: translateX(-50%); }
 #s3 { right: 6px; top: 45%; transform: translateY(-50%); }
-#s2 .name { color: #7fd6ff; }
+#s0 .name, #s2 .name { color: #7fd6ff; }
 #s1 .name, #s3 .name { color: #ff9f8a; }
 
 /* Little fan of card backs on each computer seat */
 .backs { position: relative; height: 34px; width: 44px; margin: 0 auto 4px; }
+.backs:empty { display: none; }
 .backs .back { position: absolute; left: 11px; top: 2px; width: 22px; height: 31px; border-radius: 3px;
   transform-origin: 50% 100%; }
+
+/* ---------- Picking the dealer ---------- */
+#spread { position: absolute; left: 50%; top: 45%; width: 216px; height: 148px;
+  margin: -74px 0 0 -108px; display: none; z-index: 3; }
+#spread .back { position: absolute; width: 24px; height: 34px; border-radius: 3px; cursor: pointer; }
+.drawn { position: absolute; width: 44px; height: 62px; z-index: 4; }
+.drawn .card { width: 44px; height: 62px; font-size: 13px; }
+.drawn .card.win { box-shadow: 0 0 0 3px #ffd54a, 0 0 22px #ffd54a; }
+#d0 { left: 50%; bottom: 34px; margin-left: -22px; }
+#d1 { left: 16px; top: calc(45% + 42px); }
+#d2 { top: 14px; left: calc(50% + 52px); }
+#d3 { right: 16px; top: calc(45% + 42px); }
+
+/* Deck in the middle while dealing */
+#deck { position: absolute; left: 50%; top: 45%; width: 30px; height: 42px; margin: -21px 0 0 -15px;
+  display: none; }
+#deck .back { position: absolute; inset: 0; border-radius: 3px; }
+.flyer { position: fixed; left: 0; top: 0; width: 30px; height: 42px; border-radius: 3px;
+  z-index: 8; pointer-events: none; }
 
 /* ---------- Played cards ---------- */
 #trick { position: absolute; left: 50%; top: 45%; width: 0; height: 0; }
@@ -64,8 +88,8 @@ body {
   background: rgba(0,0,0,.8); border: 2px solid #ffd54a; border-radius: 14px; padding: 10px 20px;
   font-size: 20px; font-weight: 800; white-space: nowrap; opacity: 0; pointer-events: none; }
 
-#msg { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 14px;
-  padding: 0 12px; min-height: 20px; color: #ffe9a3; }
+#msg { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 14px;
+  padding: 0 70px; min-height: 20px; color: #ffe9a3; }
 
 /* ---------- Card faces ---------- */
 .card { position: relative; border-radius: 7px; color: #1a1a1a;
@@ -97,13 +121,8 @@ body {
   padding: 12px 8px calc(12px + env(safe-area-inset-bottom)); min-height: 180px;
   background: linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.45)); }
 #hand .card { width: min(50px, calc((100vw - 46px) / 7)); aspect-ratio: 5 / 7; font-size: 15px;
-  cursor: pointer; transition: transform .18s, opacity .18s, box-shadow .18s; }
-#hand.myturn .card.ok { transform: translateY(-6px);
-  box-shadow: 0 0 0 2px #ffd54a, 0 6px 12px rgba(0,0,0,.5); }
-#hand.myturn .card.no { opacity: .4; filter: grayscale(.5); }
-#hand .card:active { transform: translateY(-2px) scale(.94); }
-#hand.deal .card { animation: dealIn .5s cubic-bezier(.2,.8,.3,1.2) backwards; }
-@keyframes dealIn { from { transform: translateY(-45vh) rotate(-25deg) scale(.4); opacity: 0; } }
+  cursor: pointer; transition: transform .15s; }
+#hand .card:active { transform: translateY(-4px) scale(.95); }
 
 /* ---------- Pop-up ---------- */
 #over { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center;
@@ -133,9 +152,16 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
 </div>
 
 <div id="table">
+  <div class="seat" id="s0"><div class="name">You</div></div>
   <div class="seat" id="s1"><div class="backs" id="b1"></div><div class="name">Left</div><div class="n" id="n1"></div></div>
   <div class="seat" id="s2"><div class="backs" id="b2"></div><div class="name">Partner</div><div class="n" id="n2"></div></div>
   <div class="seat" id="s3"><div class="backs" id="b3"></div><div class="name">Right</div><div class="n" id="n3"></div></div>
+  <div id="spread"></div>
+  <div class="drawn" id="d0"></div>
+  <div class="drawn" id="d1"></div>
+  <div class="drawn" id="d2"></div>
+  <div class="drawn" id="d3"></div>
+  <div id="deck"><div class="back" style="transform: translate(-3px,-3px)"></div><div class="back" style="transform: translate(-1.5px,-1.5px)"></div><div class="back"></div></div>
   <div id="trick"></div>
   <div id="banner"></div>
   <div id="msg"></div>
@@ -148,13 +174,14 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
     <h2>Dalcoat</h2>
     <p>You and your <b>Partner</b> (top) play against <b>Left</b> and <b>Right</b>.</p>
     <ul>
+      <li>Everyone picks a card from the deck. The <b>lowest card deals</b>.</li>
       <li>Capture tricks that contain the <b>10s</b>.</li>
       <li>You must follow the suit that was led if you can.</li>
       <li>The first time someone can't follow suit, the card they play sets the <b>trump</b> suit.</li>
       <li>Highest trump wins, otherwise highest card of the led suit.</li>
       <li>3 or 4 tens wins the round. At 2–2, the team with 7+ tricks wins.</li>
     </ul>
-    <button onclick="startRound()">Deal</button>
+    <button onclick="startGame()">Start</button>
   </div>
 </div>
 
@@ -165,10 +192,11 @@ const rankName = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' })[r] || String(r);
 const team = p => p % 2;           // 0 = you + partner, 1 = opponents
 const $ = id => document.getElementById(id);
 const wait = ms => new Promise(r => setTimeout(r, ms));
+// Seats go clockwise: 0 You (bottom) → 1 Left → 2 Partner (top) → 3 Right
 
-let hands, trick, turn, trump, tens, tricks, dealer = 3, match = [0, 0], dealing = false;
+let hands = [[], [], [], []], trick = [], turn = -1, trump = null, tens = [0, 0], tricks = [0, 0];
+let dealer = -1, match = [0, 0], fresh = null, pickResolve = null;
 
-// ---------- Setup ----------
 function newDeck() {
   const d = [];
   for (const s of SUITS) for (let r = 2; r <= 14; r++) d.push({ s, r });
@@ -179,24 +207,134 @@ function newDeck() {
   return d;
 }
 
-function startRound() {
-  const d = newDeck();
-  hands = [0, 1, 2, 3].map(p => d.slice(p * 13, p * 13 + 13)
-    .sort((a, b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || b.r - a.r));
-  dealer = (dealer + 1) % 4;
-  turn = (dealer + 1) % 4;          // player after the dealer leads
-  trick = []; trump = null; tens = [0, 0]; tricks = [0, 0];
-  $('trick').innerHTML = '';
-  $('over').classList.add('hide');
-  say(NAMES[turn] + (turn === 0 ? ' lead first' : ' leads first'));
+function sortHand() {
+  hands[0].sort((a, b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || b.r - a.r);
+}
 
-  // Deal animation, then start play
-  const first = turn;
-  turn = -1;
-  dealing = true;
+// ---------- Picking the dealer ----------
+async function startGame() {
+  $('over').classList.add('hide');
   render();
-  dealing = false;
-  setTimeout(() => { turn = first; next(); }, 13 * 50 + 450);
+
+  // Spread all 52 cards face down in the middle
+  const sp = $('spread');
+  sp.innerHTML = '';
+  sp.style.display = 'block';
+  newDeck().forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'back';
+    el.style.left = (i % 13) * 16 + 'px';
+    el.style.top = Math.floor(i / 13) * 38 + 'px';
+    el.card = c;
+    el.onclick = () => { if (pickResolve) pickResolve(el); };
+    sp.appendChild(el);
+    el.animate([{ opacity: 0, transform: 'translateY(-30px) rotate(-20deg)' }, { opacity: 1, transform: 'none' }],
+               { duration: 350, delay: i * 15, fill: 'backwards' });
+  });
+  await wait(52 * 15 + 400);
+
+  let players = [0, 1, 2, 3];
+  while (true) {
+    const drawn = {};
+    for (const p of players) $('d' + p).innerHTML = '';
+    for (const p of players) {
+      $('s' + p).classList.add('active');
+      let el;
+      if (p === 0) {
+        say('Tap any card. Lowest card deals');
+        el = await new Promise(r => pickResolve = r);
+        pickResolve = null;
+      } else {
+        say(NAMES[p] + ' is picking...');
+        await wait(700);
+        const left = [...sp.children];
+        el = left[Math.floor(Math.random() * left.length)];
+      }
+      $('s' + p).classList.remove('active');
+      drawn[p] = el.card;
+      showDrawn(p, el);
+      await wait(500);
+    }
+    const low = Math.min(...players.map(p => drawn[p].r));
+    const tied = players.filter(p => drawn[p].r === low);
+    if (tied.length === 1) { dealer = tied[0]; break; }
+    say('Tie! ' + tied.map(p => NAMES[p]).join(' & ') + ' pick again');
+    banner('Tie! Pick again', 1600);
+    await wait(1800);
+    players = tied;
+  }
+
+  $('d' + dealer).firstChild.classList.add('win');
+  render();
+  say(NAMES[dealer] + ' got the lowest card');
+  banner(NAMES[dealer] + (dealer ? ' deals' : ' deal'), 1800);
+  await wait(2000);
+
+  // Clear the table
+  const leftovers = [...sp.children, ...document.querySelectorAll('.drawn .card')];
+  await Promise.all(leftovers.map(el =>
+    el.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.5)' }], { duration: 400, fill: 'forwards' }).finished));
+  sp.innerHTML = '';
+  sp.style.display = 'none';
+  for (let p = 0; p < 4; p++) $('d' + p).innerHTML = '';
+  startRound();
+}
+
+// Flip a picked card over and move it next to the player
+function showDrawn(p, backEl) {
+  const src = backEl.getBoundingClientRect();
+  backEl.remove();
+  const el = cardEl(backEl.card);
+  $('d' + p).appendChild(el);
+  const dst = el.getBoundingClientRect();
+  el.animate([
+    { transform: `translate(${src.left - dst.left}px, ${src.top - dst.top}px) scale(.55) rotateY(90deg)` },
+    { transform: 'none' }
+  ], { duration: 450, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+
+// ---------- Dealing ----------
+async function startRound() {
+  $('over').classList.add('hide');
+  hands = [[], [], [], []]; trick = []; trump = null; tens = [0, 0]; tricks = [0, 0]; turn = -1;
+  $('trick').innerHTML = '';
+  render();
+  say(NAMES[dealer] + (dealer ? ' is dealing...' : ' are dealing...'));
+  $('deck').style.display = 'block';
+
+  // 5 cards each going clockwise from the dealer (dealer last), then 1 at a time up to 13
+  const deck = newDeck();
+  const order = [1, 2, 3, 4].map(i => (dealer + i) % 4);
+  for (const p of order) {
+    for (let k = 0; k < 5; k++) { giveCard(p, deck.pop()); await wait(70); }
+    await wait(250);
+  }
+  while (deck.length) {
+    for (const p of order) { giveCard(p, deck.pop()); await wait(100); }
+  }
+  await wait(600);
+  $('deck').style.display = 'none';
+
+  turn = (dealer + 1) % 4;
+  say(NAMES[turn] + (turn ? ' leads first' : ' lead first'));
+  next();
+}
+
+function giveCard(p, c) {
+  const a = $('deck').getBoundingClientRect();
+  const b = (p === 0 ? $('hand') : $('s' + p)).getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'back flyer';
+  document.body.appendChild(el);
+  el.animate([
+    { transform: `translate(${a.left}px, ${a.top}px)` },
+    { transform: `translate(${b.left + b.width / 2 - 15}px, ${b.top + b.height / 2 - 21}px) rotate(${Math.random() * 60 - 30}deg)` }
+  ], { duration: 350, easing: 'ease-out' }).finished.then(() => {
+    el.remove();
+    hands[p].push(c);
+    if (p === 0) { sortHand(); fresh = c; }
+    render();
+  });
 }
 
 // ---------- Rules ----------
@@ -302,9 +440,15 @@ function endRound() {
     (extra ? '<p class="big"><b>' + extra + '</b></p>' : '') +
     '<p class="big">10s: ' + tens[0] + ' – ' + tens[1] + '<br>Tricks: ' + tricks[0] + ' – ' + tricks[1] + '</p>' +
     '<p class="big">Rounds won: <b>' + match[0] + ' – ' + match[1] + '</b></p>' +
-    '<button onclick="startRound()">Next round</button>';
+    '<button onclick="nextRound()">Next round</button>';
   $('over').classList.remove('hide');
   render();
+}
+
+// The deal passes clockwise each round
+function nextRound() {
+  dealer = (dealer + 1) % 4;
+  startRound();
 }
 
 // You tap a card
@@ -385,20 +529,24 @@ function pop(el) {
              { duration: 500, easing: 'ease-out' });
 }
 
-function announceTrump() {
-  const t = $('trump');
-  t.textContent = trump;
-  t.animate([{ transform: 'scale(3) rotate(-30deg)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-            { duration: 650, easing: 'cubic-bezier(.3,1.6,.5,1)' });
+function banner(html, ms) {
   const b = $('banner');
-  b.innerHTML = 'Trump: <span style="color:' + (trump === '♥' || trump === '♦' ? '#ff6b6b' : '#fff') +
-                ';font-size:28px">' + trump + '</span>';
+  b.innerHTML = html;
   b.animate([
     { opacity: 0, transform: 'translate(-50%, -50%) scale(.5)' },
     { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)', offset: .2 },
     { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .8 },
     { opacity: 0, transform: 'translate(-50%, -50%) scale(.9)' }
-  ], { duration: 1500, easing: 'ease-out' });
+  ], { duration: ms, easing: 'ease-out' });
+}
+
+function announceTrump() {
+  const t = $('trump');
+  t.textContent = trump;
+  t.animate([{ transform: 'scale(3) rotate(-30deg)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+            { duration: 650, easing: 'cubic-bezier(.3,1.6,.5,1)' });
+  banner('Trump: <span style="color:' + (trump === '♥' || trump === '♦' ? '#ff6b6b' : '#fff') +
+         ';font-size:28px">' + trump + '</span>', 1500);
 }
 
 function render() {
@@ -407,10 +555,13 @@ function render() {
   $('trump').style.color = trump === '♥' || trump === '♦' ? '#ff6b6b' : '#fff';
   $('rounds').textContent = 'Trump · ' + match[0] + '–' + match[1];
 
+  for (let p = 0; p < 4; p++) {
+    $('s' + p).classList.toggle('dealer', p === dealer);
+    if (turn >= 0) $('s' + p).classList.toggle('active', turn === p);
+  }
   for (const p of [1, 2, 3]) {
     const n = hands[p].length, show = Math.min(n, 5);
     $('n' + p).textContent = n + ' cards';
-    $('s' + p).classList.toggle('active', turn === p);
     let backs = '';
     for (let i = 0; i < show; i++) {
       backs += '<div class="back" style="transform: rotate(' + ((i - (show - 1) / 2) * 12) + 'deg)"></div>';
@@ -420,16 +571,14 @@ function render() {
 
   const hand = $('hand');
   hand.innerHTML = '';
-  hand.classList.toggle('myturn', turn === 0);
-  hand.classList.toggle('deal', dealing);
-  const ok = turn === 0 ? legal(0) : [];
-  hands[0].forEach((c, i) => {
+  for (const c of hands[0]) {
     const el = cardEl(c);
-    el.classList.add(ok.includes(c) ? 'ok' : 'no');
-    if (dealing) el.style.animationDelay = (i * 50) + 'ms';
     el.onclick = () => tap(c, el);
     hand.appendChild(el);
-  });
+    if (c === fresh) el.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+                                { duration: 250, easing: 'ease-out' });
+  }
+  fresh = null;
 }
 </script>
 </body>
