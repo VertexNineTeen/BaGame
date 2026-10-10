@@ -10,15 +10,15 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  background: radial-gradient(ellipse at 50% 40%, #1d7a48, #0b3d23 70%, #062615);
+  background: var(--room, radial-gradient(ellipse at 50% 40%, #3a3a3a, #121212 70%, #050505));
   color: #fff; height: 100vh; height: 100dvh;
   display: flex; flex-direction: column; overflow: hidden; user-select: none;
 }
 
 /* ---------- Score bar ---------- */
 #bar { display: flex; justify-content: space-between; align-items: center; gap: 6px;
-  padding: calc(8px + env(safe-area-inset-top)) 12px 8px; background: rgba(0,0,0,.45);
-  font-size: 13px; box-shadow: 0 2px 8px rgba(0,0,0,.4); z-index: 2; }
+  padding: calc(14px + env(safe-area-inset-top)) 18px 8px; background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0));
+  font-size: 13px; position: relative; z-index: 2; }
 .team { line-height: 1.4; }
 .team b { font-size: 15px; }
 .team span { display: inline-block; font-weight: 700; }
@@ -38,9 +38,49 @@ body {
 
 /* ---------- Table ---------- */
 #table { position: relative; flex: 1; min-height: 300px; }
-#table::before { content: ''; position: absolute; left: 50%; top: 45%; width: 250px; height: 210px;
-  transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid rgba(255,255,255,.08);
-  background: radial-gradient(rgba(255,255,255,.06), transparent 70%); }
+/* The card table: leather rail with chrome trim, cup holders, LED strip, patterned felt */
+#tbl { position: fixed; top: 4px; bottom: 4px; left: 3px; right: 3px; pointer-events: none; z-index: 0; }
+#tbl .rail { position: absolute; inset: 0; border-radius: 50%; background: var(--rail);
+  box-shadow: 0 0 0 3px var(--chrome), 0 0 0 5px rgba(0,0,0,.6), 0 14px 34px rgba(0,0,0,.75), 0 0 46px var(--under),
+              inset 0 3px 6px rgba(255,255,255,.2), inset 0 -6px 12px rgba(0,0,0,.65); }
+/* Leather padding seams and stitching */
+#tbl .stitch { position: absolute; inset: 7px; border-radius: 50%; border: 1.5px dashed var(--stitch); opacity: .8; }
+#tbl .led { position: absolute; inset: 17px; border-radius: 50%; border: 2px solid var(--glow);
+  box-shadow: 0 0 12px var(--glow), 0 0 26px var(--glow), inset 0 0 12px var(--glow); animation: ledPulse 3.2s ease-in-out infinite; }
+@keyframes ledPulse { 50% { opacity: .65; } }
+/* Wooden racetrack ring between the rail and the felt */
+#tbl .wood { position: absolute; inset: 21px; border-radius: 50%; background: var(--wood); display: var(--woodOn, none);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,.25), inset 0 -3px 6px rgba(0,0,0,.6); }
+#tbl .felt { position: absolute; inset: var(--feltInset, 21px); border-radius: 50%; background: var(--felt); overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(0,0,0,.75), inset 0 0 6px rgba(0,0,0,.9); }
+#tbl .spot { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.13), transparent 55%); }
+#tbl .track { position: absolute; inset: 15% 13%; border-radius: 50%; border: 2px solid var(--line);
+  background: var(--trackfill); box-shadow: 0 0 var(--lineGlow, 0) var(--line), inset 0 0 var(--lineGlow, 0) var(--line); }
+/* Centerpiece: a mandala ring with an emblem */
+#tbl .mandala { position: absolute; left: 50%; top: 45%; width: min(64vw, 300px); aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; opacity: var(--mandalaOp, 0);
+  background: repeating-conic-gradient(var(--art) 0 3deg, transparent 3deg 10deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 30%, #000 30.5% 32%, transparent 32.5% 40%, #000 40.5% 48%, transparent 48.5% 58%, #000 58.5% 60%, transparent 60.5%);
+  mask: radial-gradient(circle, transparent 0 30%, #000 30.5% 32%, transparent 32.5% 40%, #000 40.5% 48%, transparent 48.5% 58%, #000 58.5% 60%, transparent 60.5%);
+  animation: spin 120s linear infinite; }
+#tbl .emblem { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); text-align: center; color: var(--art);
+  opacity: .38; font-family: Georgia, serif; font-weight: 900; letter-spacing: 4px; font-size: 15px; line-height: 1;
+  filter: drop-shadow(0 0 10px var(--art)) drop-shadow(0 0 22px var(--emGlow, transparent)); }
+#tbl .emblem i { display: block; font-style: normal; font-size: 64px; letter-spacing: 0; margin-bottom: 2px; }
+#tbl .suit { position: absolute; font-size: 22px; color: var(--line); opacity: .45; transform: translate(-50%, -50%); }
+#tbl .orn { position: absolute; left: 50%; font-size: 70px; line-height: 1; color: var(--floral); transform: translateX(-50%); }
+#tbl .o1 { top: 3%; }
+#tbl .o2 { bottom: 3%; transform: translateX(-50%) rotate(180deg); }
+#tbl .stars { position: absolute; inset: 0; display: var(--stars, none); }
+#tbl .stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 6px #9fd0ff; animation: twinkle ease-in-out infinite; }
+#tbl .cup { position: absolute; width: 13px; height: 13px; border-radius: 50%; transform: translate(-50%, -50%);
+  background: var(--cup); box-shadow: inset 0 2px 3px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.2); }
+#tblName { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); z-index: 7; pointer-events: none;
+  padding: 10px 22px; border-radius: 14px; background: rgba(0,0,0,.75); border: 2px solid var(--glow);
+  box-shadow: 0 0 20px var(--glow); text-align: center; white-space: nowrap; opacity: 0; }
+#tblName small { display: block; font-size: 10px; letter-spacing: 3px; opacity: .7; }
+#tblName b { font-family: Georgia, serif; font-size: 22px; }
 
 .seat { position: absolute; text-align: center; font-size: 13px; padding: 6px 10px; max-width: 110px;
   border-radius: 12px; background: rgba(0,0,0,.3); border: 2px solid transparent; }
@@ -51,10 +91,10 @@ body {
   display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .seat .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat .n { font-size: 11px; opacity: .8; }
-#s0 { left: 6px; bottom: 6px; z-index: 3; }
-#s1 { left: 6px; top: 45%; transform: translateY(-50%); }
+#s0 { left: 28px; bottom: 6px; z-index: 3; }
+#s1 { left: 26px; top: 45%; transform: translateY(-50%); }
 #s2 { top: 8px; left: 50%; transform: translateX(-50%); }
-#s3 { right: 6px; top: 45%; transform: translateY(-50%); }
+#s3 { right: 26px; top: 45%; transform: translateY(-50%); }
 #s0 .name, #s2 .name { color: #7fd6ff; }
 #s1 .name, #s3 .name { color: #ff9f8a; }
 
@@ -143,7 +183,8 @@ body {
 /* ---------- Your hand ---------- */
 #hand { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 6px 5px;
   padding: 12px 8px calc(12px + env(safe-area-inset-bottom)); min-height: 180px;
-  background: linear-gradient(rgba(0,0,0,.15), rgba(0,0,0,.45)); }
+  padding-bottom: calc(26px + env(safe-area-inset-bottom)); position: relative; z-index: 2;
+  background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.35)); }
 #hand .card { width: min(50px, calc((100vw - 46px) / 7)); aspect-ratio: 5 / 7; font-size: 15px;
   cursor: pointer; transition: transform .15s; }
 #hand .card:active { transform: translateY(-4px) scale(.95); }
@@ -361,6 +402,16 @@ button:disabled { opacity: .5; }
 </div>
 
 <div id="table">
+  <div id="tbl">
+    <div class="rail"></div><div class="stitch"></div><div class="led"></div><div class="wood"></div>
+    <div class="felt"><div class="stars" id="tblStars"></div><div class="spot"></div>
+      <div class="orn o1" id="orn1"></div><div class="orn o2" id="orn2"></div>
+      <div class="mandala"></div><div class="track"></div>
+      <div class="suit" style="left:50%;top:15%">♠</div><div class="suit" style="left:50%;top:85%">♥</div>
+      <div class="suit" style="left:13%;top:50%">♣</div><div class="suit" style="left:87%;top:50%">♦</div>
+      <div class="emblem"><i id="emblem">♠</i>DALCOAT</div></div>
+  </div>
+  <div id="tblName"><small>TONIGHT'S TABLE</small><b id="tblTitle"></b></div>
   <div class="seat" id="s0"><div class="name" id="nm0">You</div><div class="tens" id="x0"></div></div>
   <div class="seat" id="s1"><div class="backs" id="b1"></div><div class="name" id="nm1"></div><div class="n" id="n1"></div><div class="tens" id="x1"></div></div>
   <div class="seat" id="s2"><div class="backs" id="b2"></div><div class="name" id="nm2"></div><div class="n" id="n2"></div><div class="tens" id="x2"></div></div>
@@ -410,7 +461,7 @@ button:disabled { opacity: .5; }
     </div>
     <p class="small" style="margin-top:14px">You and the player across from you are a team.</p>
     <p class="credit" id="nowPlaying"></p>
-    <p class="credit">Music: Tunetank, SunSides &amp; AtlasAudio via Pixabay · v2026-10-10c</p>
+    <p class="credit">Music: Tunetank, SunSides &amp; AtlasAudio via Pixabay · v2026-10-10g</p>
   </div>
 
   <div class="screen" id="lobby">
@@ -442,7 +493,7 @@ button:disabled { opacity: .5; }
 
 <script>
 // Bump this on every update; phones running an older saved copy reload themselves
-const VERSION = '2026-10-10c';
+const VERSION = '2026-10-10g';
 (async function checkForUpdate() {
   try {
     const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
@@ -557,7 +608,8 @@ function handleAction(p, a) {
 
 async function runGame() {
   E.started = true;
-  emit({ t: 'start', names: E.seats.map(s => s.name), bots: E.seats.map(s => !!s.bot) });
+  emit({ t: 'start', names: E.seats.map(s => s.name), bots: E.seats.map(s => !!s.bot),
+         table: Math.floor(Math.random() * TABLES.length) });
   await ewait(400);
 
   // Everyone picks a card from the spread; lowest deals
@@ -935,6 +987,7 @@ function onEvent(ev) {
 
 function onStart(ev) {
   V = newView(ev.names, ev.bots);
+  applyTable(ev.table, true);
   // Seats played on this device (more than one when sharing a phone)
   V.mine = [0, 1, 2, 3].map(p => isHost ? !!(E && E.seats[p].local) : p === me);
   me = V.mine.indexOf(true);
@@ -1237,6 +1290,82 @@ function tapCard(c) {
   if (V.kind === 'choose') { V.kind = null; act({ a: 'choose', card: c }); }
   else if (V.kind === 'play') { V.kind = null; act({ a: 'play', card: c }); }
 }
+
+// ---------- Table designs (one picked at random each game) ----------
+const WOOD_WALNUT = 'repeating-linear-gradient(78deg, rgba(0,0,0,.2) 0 2px, transparent 2px 6px, rgba(255,255,255,.06) 6px 7px, transparent 7px 11px), linear-gradient(135deg, #8a5a2e, #4e2b12 45%, #7a4a22 70%, #4a2810)';
+const WOOD_OAK = 'repeating-linear-gradient(80deg, rgba(90,50,10,.22) 0 2px, transparent 2px 7px, rgba(255,255,255,.08) 7px 8px, transparent 8px 12px), linear-gradient(135deg, #d39a52, #a8692a 45%, #c98a42 70%, #95591f)';
+const SILVER_CUP = 'radial-gradient(circle at 40% 35%, #f5f5f5, #9aa0a8 45%, #34373c 75%)';
+const GOLD_CUP = 'radial-gradient(circle at 40% 35%, #fff3c4, #e0a800 45%, #6b4e00 80%)';
+const TABLES = [
+  { name: 'Emerald Royale', orn: '❦', emblem: '♠', vars: {
+      felt: 'repeating-linear-gradient(45deg, rgba(0,0,0,.07) 0 1px, transparent 1px 9px), repeating-linear-gradient(-45deg, rgba(0,0,0,.07) 0 1px, transparent 1px 9px), radial-gradient(ellipse at center, #2fb36b, #10663a 60%, #063a20)',
+      trackfill: 'transparent', rail: 'linear-gradient(160deg, #2a2a2a, #0a0a0a 60%, #1c1c1c)', stitch: '#d4af37',
+      wood: WOOD_WALNUT, woodOn: 'block', feltInset: '33px', glow: '#ffd54a', under: 'rgba(255,213,74,.15)',
+      line: '#f0cf6a', art: '#ffd54a', mandalaOp: '.22', floral: 'rgba(255,233,163,.12)', chrome: '#d4af37', cup: GOLD_CUP,
+      room: 'radial-gradient(ellipse at 50% 40%, #1f2a22, #070a08 75%)' } },
+  { name: 'Crimson Damask', orn: '❧', emblem: '♛', vars: {
+      felt: 'radial-gradient(circle, rgba(255,210,120,.13) 2px, transparent 3px) 0 0/26px 26px, radial-gradient(circle, rgba(255,210,120,.08) 6px, transparent 7px) 13px 13px/26px 26px, repeating-conic-gradient(from 45deg, rgba(0,0,0,.12) 0 25%, transparent 0 50%) 0 0/26px 26px, radial-gradient(ellipse at center, #c8173b, #7c0a21 60%, #3a0410)',
+      trackfill: 'transparent', rail: 'linear-gradient(160deg, #262626, #070707 60%, #181818)', stitch: '#ff4d6d',
+      woodOn: 'none', feltInset: '21px', glow: '#ff2d4d', under: 'rgba(255,45,77,.2)',
+      line: '#ffd54a', art: '#ffd54a', mandalaOp: '.35', floral: 'rgba(255,215,120,.16)', chrome: '#d4af37', cup: GOLD_CUP,
+      room: 'radial-gradient(ellipse at 50% 40%, #2e0c12, #0b0204 75%)' } },
+  { name: 'Sapphire Oak', orn: '✦', emblem: '♛', vars: {
+      felt: 'repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 5px), radial-gradient(ellipse at center, #3a86ff, #1450c8 55%, #0a2a78)',
+      trackfill: 'transparent', rail: 'linear-gradient(160deg, #1d2a4a, #0a1226 60%, #17223e)', stitch: '#9fc2ff',
+      wood: WOOD_OAK, woodOn: 'block', feltInset: '33px', glow: '#2ee6ff', under: 'rgba(46,230,255,.25)',
+      line: 'rgba(235,245,255,.85)', art: '#e8f1ff', mandalaOp: '.18', floral: 'rgba(200,225,255,.14)', chrome: '#c9ced6', cup: SILVER_CUP,
+      room: 'radial-gradient(ellipse at 50% 40%, #12223f, #03070f 75%)' } },
+  { name: 'Amethyst Neon', orn: '◆', emblem: '◆', vars: {
+      felt: 'repeating-linear-gradient(60deg, rgba(255,255,255,.06) 0 1px, transparent 1px 20px), repeating-linear-gradient(-60deg, rgba(255,255,255,.06) 0 1px, transparent 1px 20px), radial-gradient(ellipse at center, #7a2fc4, #3e1270 60%, #180530)',
+      trackfill: 'transparent', rail: 'linear-gradient(160deg, #241a2e, #08050c 60%, #1a1222)', stitch: '#ff3df2',
+      woodOn: 'none', feltInset: '21px', glow: '#ff3df2', under: 'rgba(255,61,242,.3)',
+      line: '#3df2ff', lineGlow: '10px', art: '#3df2ff', emGlow: '#ff3df2', mandalaOp: '.25', floral: 'rgba(61,242,255,.14)', chrome: '#9aa0a8', cup: SILVER_CUP,
+      room: 'radial-gradient(ellipse at 50% 40%, #24092f, #07020b 75%)' } },
+  { name: 'Obsidian Flame', orn: '', emblem: '♠', vars: {
+      felt: 'radial-gradient(ellipse at 50% 46%, rgba(255,140,30,.8), rgba(220,50,0,.45) 22%, rgba(120,20,0,.15) 40%, transparent 55%), repeating-linear-gradient(135deg, rgba(255,255,255,.025) 0 1px, transparent 1px 7px), radial-gradient(ellipse at center, #1a1a1a, #0b0b0b 65%, #030303)',
+      trackfill: 'transparent', rail: 'linear-gradient(160deg, #262626, #070707 60%, #181818)', stitch: '#ff8a1f',
+      woodOn: 'none', feltInset: '21px', glow: '#ff7a00', under: 'rgba(255,122,0,.25)',
+      line: 'rgba(255,170,90,.75)', art: '#ffb347', emGlow: '#ff4500', mandalaOp: '0', floral: 'transparent', chrome: '#9aa0a8', cup: SILVER_CUP,
+      room: 'radial-gradient(ellipse at 50% 40%, #2a160a, #080402 75%)' } }
+];
+
+function applyTable(i, announce) {
+  const t = TABLES[i] || TABLES[0];
+  for (const k of ['lineGlow', 'emGlow', 'wood']) document.body.style.removeProperty('--' + k);
+  for (const [k, v] of Object.entries(t.vars)) document.body.style.setProperty('--' + k, v);
+  $('emblem').textContent = t.emblem;
+  document.body.style.setProperty('--stars', t.stars ? 'block' : 'none');
+  $('orn1').textContent = $('orn2').textContent = t.orn;
+  if (!announce) return;
+  $('tblTitle').textContent = t.name;
+  $('tblName').animate([
+    { opacity: 0, transform: 'translate(-50%, -50%) scale(.6)' },
+    { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)', offset: .15 },
+    { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .85 },
+    { opacity: 0, transform: 'translate(-50%, -50%) scale(.95)' }
+  ], { duration: 2200, easing: 'ease-out' });
+}
+
+// Cup holders around the rail and twinkling lights for the galaxy table
+(function buildTable() {
+  const tbl = $('tbl');
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2 + Math.PI / 10, c = document.createElement('div');
+    c.className = 'cup';
+    c.style.left = 'calc(50% + ' + Math.cos(a).toFixed(3) + ' * (50% - 9px))';
+    c.style.top = 'calc(50% + ' + Math.sin(a).toFixed(3) + ' * (50% - 9px))';
+    tbl.appendChild(c);
+  }
+  for (let i = 0; i < 60; i++) {
+    const st = document.createElement('i');
+    st.style.left = Math.random() * 100 + '%';
+    st.style.top = Math.random() * 100 + '%';
+    st.style.animationDuration = 1.5 + Math.random() * 3 + 's';
+    st.style.animationDelay = -Math.random() * 4 + 's';
+    $('tblStars').appendChild(st);
+  }
+  applyTable(0);
+})();
 
 // ---------- Drawing ----------
 function sortHand(p) {
