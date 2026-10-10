@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0b3d23">
 <title>Dalcoat</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
@@ -24,10 +25,10 @@ body {
 .us b { color: #7fd6ff; }
 .them b { color: #ff9f8a; }
 .them { text-align: right; }
-#mid { text-align: center; line-height: 1.25; }
-#trump { display: inline-flex; align-items: center; justify-content: center; height: 28px; font-size: 24px; }
-#trump .card { width: 22px; height: 30px; font-size: 9px; border-radius: 4px; }
-#tlabel, #rounds { font-size: 11px; opacity: .8; }
+#mid { text-align: center; font-size: 11px; }
+#rounds { opacity: .8; margin-bottom: 3px; }
+#sndBar, #leave2 { margin: 0; padding: 4px 10px; font-size: 11px; border-radius: 8px; box-shadow: none;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); }
 
 /* ---------- Table ---------- */
 #table { position: relative; flex: 1; min-height: 300px; }
@@ -35,23 +36,23 @@ body {
   transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid rgba(255,255,255,.08);
   background: radial-gradient(rgba(255,255,255,.06), transparent 70%); }
 
-.seat { position: absolute; text-align: center; font-size: 13px; padding: 6px 10px;
+.seat { position: absolute; text-align: center; font-size: 13px; padding: 6px 10px; max-width: 110px;
   border-radius: 12px; background: rgba(0,0,0,.3); border: 2px solid transparent; }
 .seat.active { border-color: #ffd54a; animation: glow 1.2s ease-in-out infinite; }
 @keyframes glow { 50% { box-shadow: 0 0 16px #ffd54a; } }
 .seat.dealer::after { content: 'D'; position: absolute; top: -9px; right: -9px; width: 20px; height: 20px;
   border-radius: 50%; background: #ffd54a; color: #222; font-size: 12px; font-weight: 800;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
-.seat .name { font-weight: 700; }
+.seat .name { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat .n { font-size: 11px; opacity: .8; }
-#s0 { left: 6px; bottom: 6px; }
+#s0 { left: 6px; bottom: 6px; z-index: 3; }
 #s1 { left: 6px; top: 45%; transform: translateY(-50%); }
 #s2 { top: 8px; left: 50%; transform: translateX(-50%); }
 #s3 { right: 6px; top: 45%; transform: translateY(-50%); }
 #s0 .name, #s2 .name { color: #7fd6ff; }
 #s1 .name, #s3 .name { color: #ff9f8a; }
 
-/* Little fan of card backs on each computer seat */
+/* Little fan of card backs on each other seat */
 .backs { position: relative; height: 34px; width: 44px; margin: 0 auto 4px; }
 .backs:empty { display: none; }
 .backs .back { position: absolute; left: 11px; top: 2px; width: 22px; height: 31px; border-radius: 3px;
@@ -61,7 +62,6 @@ body {
 .tens { display: grid; grid-template-columns: repeat(2, 24px); gap: 3px; justify-content: center; }
 .tens:not(:empty) { margin-top: 5px; }
 .tens .card { width: 24px; height: 34px; font-size: 9px; border-radius: 4px; }
-#s0 { z-index: 3; }
 /* On wider screens your box sits in the empty space left of your hand */
 @media (min-width: 700px) {
   #s0 { bottom: auto; top: calc(100% + 24px); left: 16px; padding: 10px 14px; }
@@ -110,7 +110,7 @@ body {
   font-size: 20px; font-weight: 800; white-space: nowrap; opacity: 0; pointer-events: none; }
 
 #msg { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 14px;
-  padding: 0 70px; min-height: 20px; color: #ffe9a3; }
+  padding: 0 80px; min-height: 20px; color: #ffe9a3; }
 
 /* ---------- Card faces ---------- */
 .card { position: relative; border-radius: 7px; color: #1a1a1a;
@@ -152,28 +152,213 @@ body {
   animation: popIn .45s cubic-bezier(.3,1.5,.5,1); }
 @keyframes popIn { from { transform: scale(.6); opacity: 0; } }
 #box h2 { margin-bottom: 10px; color: #0b3d23; }
-#box p, #box li { font-size: 14px; line-height: 1.5; margin-bottom: 6px; text-align: left; }
-#box ul { padding-left: 18px; margin-bottom: 10px; }
-#box .big { font-size: 16px; text-align: center; }
+#box p { font-size: 14px; line-height: 1.5; margin-bottom: 6px; }
+#box .big { font-size: 16px; }
+#box .wait { opacity: .7; margin-top: 12px; }
+/* ---------- Round result ---------- */
+#box.result { position: relative; overflow: hidden; color: #fff; padding: 22px 16px 18px; max-width: 380px;
+  background: linear-gradient(170deg, #0f2a6b 0%, #071640 55%, #040b24 100%);
+  border: 1px solid rgba(255,255,255,.15); border-top: 4px solid #dc143c;
+  box-shadow: 0 24px 70px rgba(0,0,0,.75), 0 0 50px rgba(220,20,60,.3); }
+.res-glow { position: absolute; left: 50%; top: -120px; width: 360px; height: 260px; transform: translateX(-50%);
+  background: radial-gradient(ellipse, rgba(255,213,74,.35), transparent 65%); pointer-events: none;
+  animation: breathe 3s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .55; } }
+.res-icon { position: relative; font-size: 46px; line-height: 1; animation: dropIn .8s cubic-bezier(.2,1.6,.4,1) backwards;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); }
+.res-title { position: relative; font-family: Georgia, serif; font-size: 38px; font-weight: 900; letter-spacing: 2px;
+  background: linear-gradient(100deg, #b8860b, #ffe27a 30%, #fff8d6 50%, #ffe27a 70%, #b8860b);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 0 #7a5200) drop-shadow(0 0 18px rgba(255,200,80,.45));
+  animation: popIn .6s .15s cubic-bezier(.3,1.6,.5,1) backwards, shine 3s linear infinite; }
+.res-title.lost { background: linear-gradient(100deg, #9aa7c7, #e8eeff 50%, #9aa7c7); background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 0 #3a4a75); }
+.res-sub { position: relative; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; opacity: .7; margin-top: 2px; }
+.res-badge { position: relative; display: inline-block; margin-top: 10px; padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #3a2a00;
+  background: linear-gradient(#ffe27a, #e0a800); box-shadow: 0 0 18px rgba(255,213,74,.5);
+  animation: popIn .5s .6s cubic-bezier(.3,1.6,.5,1) backwards, pulse 1.6s 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.06); } }
+.res-teams { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; margin: 16px 0 12px; }
+.res-team { position: relative; padding: 12px 6px 10px; border-radius: 14px; background: rgba(255,255,255,.06);
+  border: 2px solid rgba(255,255,255,.1); animation: popIn .5s .3s backwards; }
+.res-team.won { border-color: #ffd54a; background: rgba(255,213,74,.08); box-shadow: 0 0 22px rgba(255,213,74,.3); }
+.res-team .crown { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 22px;
+  animation: bob 2s ease-in-out infinite; }
+.res-team .tn { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; }
+.res-team .sub { font-size: 10px; opacity: .6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.res-team .num { font-size: 40px; font-weight: 900; line-height: 1; font-family: Georgia, serif; }
+.res-team .lbl, .res-rounds .lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
+.res-team .lbl b { font-size: 13px; opacity: 1; }
+.res-team .mini { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; min-height: 34px; margin: 8px 0; }
+.res-team .mini .card { width: 24px; height: 34px; font-size: 9px; border-radius: 4px;
+  animation: flipIn .45s cubic-bezier(.3,1.5,.5,1) backwards; }
+@keyframes flipIn { from { transform: rotateY(90deg) scale(.5); opacity: 0; } }
+.res-team .none { font-size: 11px; opacity: .45; align-self: center; }
+.res-team .bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; margin-bottom: 4px; }
+.res-team .bar i { display: block; height: 100%; width: var(--w); border-radius: 4px;
+  background: linear-gradient(90deg, #dc143c, #ff6b8a); animation: grow 1.2s .5s ease-out backwards; }
+@keyframes grow { from { width: 0; } }
+.vs { font-family: Georgia, serif; font-weight: 900; font-size: 18px; color: #ff4d6d; text-shadow: 0 0 12px rgba(220,20,60,.8); }
+.res-rounds { position: relative; padding: 8px; border-radius: 12px; background: rgba(0,0,0,.25); }
+.res-rounds .score { font-size: 34px; font-weight: 900; font-family: Georgia, serif; line-height: 1.1; }
+.res-rounds .score i { font-style: normal; opacity: .5; margin: 0 10px; }
+#box .res-next { position: relative; margin-top: 14px; background: linear-gradient(#ff2a55, #c8102e);
+  box-shadow: 0 4px 0 #6e0719, 0 0 22px rgba(220,20,60,.5); animation: pulse 1.6s 1.5s ease-in-out infinite; }
+#box.result .wait { color: #fff; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 11; }
+.confetti i { position: absolute; top: -20px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { transform: translate(var(--x), 110vh) rotate(var(--r)); } }
+
 button { margin-top: 12px; background: linear-gradient(#21854f, #13592f); color: #fff; border: 0;
-  border-radius: 12px; padding: 13px 34px; font-size: 16px; font-weight: 700;
-  box-shadow: 0 4px 0 #0b3d23; }
+  border-radius: 12px; padding: 13px 34px; font-size: 16px; font-weight: 700; font-family: inherit;
+  box-shadow: 0 4px 0 #0b3d23; cursor: pointer; }
 button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
+button:disabled { opacity: .5; }
+
+/* ---------- Main menu & lobby: night sky over the Himalayas ---------- */
+#menu { position: fixed; inset: 0; z-index: 20; overflow: hidden; display: flex; align-items: center;
+  justify-content: center; padding: 16px; overflow-y: auto;
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(220,20,60,.28), transparent 50%),
+    radial-gradient(ellipse at 15% 70%, rgba(40,90,220,.25), transparent 55%),
+    linear-gradient(#01051a 0%, #04113a 45%, #0a2766 100%); }
+#menu.hide { display: none; }
+#menu.hide ~ #sound { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Twinkling stars and a shooting star */
+#sky { position: absolute; inset: 0; pointer-events: none; }
+.star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff;
+  box-shadow: 0 0 6px #fff; animation: twinkle ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .15; transform: scale(.6); } 50% { opacity: 1; transform: scale(1.3); } }
+.shoot { position: absolute; top: 8%; right: -20%; width: 140px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, #fff, rgba(255,255,255,0)); transform: rotate(-28deg);
+  filter: drop-shadow(0 0 6px #fff); animation: shoot 7s ease-in infinite; opacity: 0; }
+@keyframes shoot { 0% { opacity: 0; transform: translate(0, 0) rotate(-28deg); }
+                   3% { opacity: 1; }
+                   14% { opacity: 0; transform: translate(-75vw, 40vh) rotate(-28deg); }
+                   100% { opacity: 0; transform: translate(-75vw, 40vh) rotate(-28deg); } }
+
+/* Snowy mountains along the bottom */
+.mountains { position: absolute; left: 0; right: 0; bottom: 0; height: 38vh; width: 100%; pointer-events: none; }
+
+/* Waving Nepal flag with a pole */
+.flagwrap { position: relative; height: 150px; width: 120px; margin: 0 auto -6px; animation: fade 1s backwards; }
+.pole { position: absolute; left: 14px; top: 0; bottom: 0; width: 5px; border-radius: 3px;
+  background: linear-gradient(90deg, #8c8c8c, #f2f2f2, #9a9a9a); }
+.pole::before { content: ''; position: absolute; left: -4px; top: -8px; width: 13px; height: 13px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff6c8, #e0a800 60%, #8a6500); }
+.flag { position: absolute; left: 18px; top: 4px; width: 92px; height: 114px; display: flex;
+  filter: drop-shadow(0 0 14px rgba(220,20,60,.75)) drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+/* The flag is cut into thin strips; each ripples a little later than the one before,
+   so a wave rolls from the pole to the tip, with light and shadow like folds of cloth */
+.flag .strip { position: relative; flex: none; height: 100%; overflow: hidden;
+  animation: flutter 1.8s ease-in-out infinite; }
+.flag .strip > div { position: absolute; top: 0; width: 92px; height: 114px; }
+@keyframes flutter {
+  0%, 100% { transform: translateY(calc(var(--a) * -1)); filter: brightness(1.15); }
+  50% { transform: translateY(var(--a)); filter: brightness(.78); } }
+
+/* Title: white letters with a crimson 3D edge, dropping in and shining */
+.title { position: relative; display: inline-block; }
+.title span { display: inline-block; font-size: 56px; font-weight: 900; letter-spacing: 2px; line-height: 1.05;
+  font-family: Georgia, 'Times New Roman', serif;
+  background: linear-gradient(100deg, #ffd9e0 0%, #fff 20%, #ffb3c1 32%, #fff 44%, #e8eeff 60%, #fff 80%, #ffd9e0 100%);
+  background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1px 0 #ff2a55) drop-shadow(0 2px 0 #dc143c) drop-shadow(0 3px 0 #a00d2c)
+          drop-shadow(0 4px 0 #003893) drop-shadow(0 10px 14px rgba(0,0,0,.7)) drop-shadow(0 0 22px rgba(220,20,60,.55));
+  animation: dropIn .9s cubic-bezier(.2,1.6,.4,1) backwards, bob 3.2s ease-in-out infinite, gleam 4s linear infinite; }
+@keyframes dropIn { from { transform: translateY(-120px) rotate(-25deg) scale(1.6); opacity: 0; } }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+@keyframes gleam { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+@media (max-width: 380px) { .title span { font-size: 48px; } }
+.screen { position: relative; width: 100%; max-width: 380px; text-align: center; display: none; margin: auto; }
+.screen.on { display: block; animation: popIn .45s cubic-bezier(.3,1.4,.5,1); }
+.logo { font-size: 54px; font-weight: 900; letter-spacing: 5px; line-height: 1.1; font-family: Georgia, serif; color: #fff;
+  filter: drop-shadow(0 2px 0 #dc143c) drop-shadow(0 3px 0 #003893) drop-shadow(0 0 16px rgba(220,20,60,.5)); }
+.tag { color: #dfe6ff; font-size: 12px; letter-spacing: 4px; text-transform: uppercase; margin: 8px 0 20px;
+  animation: fade 1.2s .9s backwards; }
+.tag b { color: #ff4d6d; }
+
+.panel { position: relative; background: rgba(4,14,44,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.18); border-top: 3px solid #dc143c; border-radius: 18px; padding: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 30px rgba(220,20,60,.15); animation: fade .8s .6s backwards; }
+#menu .gold { background: linear-gradient(#ff2a55, #c8102e); color: #fff; box-shadow: 0 4px 0 #6e0719, 0 0 20px rgba(220,20,60,.45); }
+#menu .gold:active { box-shadow: 0 1px 0 #6e0719; }
+#menu .row button { background: linear-gradient(#2a6ae0, #003893); box-shadow: 0 4px 0 #001c4d; }
+#menu .txt:focus { border-color: #ff4d6d; }
+#music { position: fixed; right: 62px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 25; margin: 0;
+  width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 18px; box-shadow: none;
+  background: #003893; border: 2px solid #fff; }
+#menu.hide ~ #music { display: none; }
+.barBtn { margin: 0; padding: 4px 10px; font-size: 11px; border-radius: 8px; box-shadow: none;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); }
+.credit { font-size: 10px; opacity: .55; margin-top: 6px; }
+#nowPlaying { opacity: .8; font-size: 11px; }
+.mode { display: inline-block; margin-bottom: 8px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700;
+  background: rgba(220,20,60,.25); border: 1px solid rgba(255,77,109,.6); }
+
+#sound { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 25; margin: 0;
+  width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 18px; box-shadow: none;
+  background: #003893; border: 2px solid #fff; }
+.panel label { display: block; text-align: left; font-size: 12px; opacity: .8; margin-bottom: 5px; }
+.txt { width: 100%; padding: 12px 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.08); color: #fff; font-size: 16px; font-family: inherit; outline: none; }
+.txt:focus { border-color: #ffd54a; }
+.btn { display: block; width: 100%; }
+.gold { background: linear-gradient(#ffe27a, #e0a800); color: #3a2a00; box-shadow: 0 4px 0 #8a6500; }
+.gold:active { box-shadow: 0 1px 0 #8a6500; }
+.ghost { background: rgba(255,255,255,.1); box-shadow: none; border: 1px solid rgba(255,255,255,.25); }
+.ghost:active { box-shadow: none; }
+.row { display: flex; gap: 8px; align-items: stretch; }
+.row .txt { flex: 1; text-transform: uppercase; letter-spacing: 4px; text-align: center; font-weight: 700; }
+.row button { margin-top: 0; padding: 0 20px; }
+.or { margin: 16px 0 10px; font-size: 12px; opacity: .6; display: flex; align-items: center; gap: 10px; }
+.or::before, .or::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.25); }
+
+.code { display: flex; gap: 6px; justify-content: center; margin: 8px 0 6px; }
+.code span { width: 42px; height: 52px; background: #fff; color: #c8102e; border-radius: 9px; font-size: 26px;
+  font-weight: 900; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 0 rgba(0,0,0,.35); animation: popIn .4s cubic-bezier(.3,1.5,.5,1) backwards; }
+.small { font-size: 12px; opacity: .75; }
+.mini-table { position: relative; height: 230px; margin: 12px 0 6px; }
+.mini-table::before { content: ''; position: absolute; left: 50%; top: 50%; width: 140px; height: 100px;
+  transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(#239455, #14603a);
+  border: 6px solid #6b3f1d; box-shadow: 0 6px 18px rgba(0,0,0,.5), inset 0 0 18px rgba(0,0,0,.4); }
+.lseat { position: absolute; width: 96px; padding: 8px 6px; border-radius: 12px; font-size: 13px; font-weight: 700;
+  background: rgba(0,0,0,.5); border: 2px solid; transform: translate(-50%, -50%);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: box-shadow .2s; }
+.lseat.v0 { left: 50%; top: calc(100% - 24px); }
+.lseat.v1 { left: 52px; top: 50%; }
+.lseat.v2 { left: 50%; top: 24px; }
+.lseat.v3 { left: calc(100% - 52px); top: 50%; }
+.lseat.blue { border-color: #7fd6ff; }
+.lseat.red { border-color: #ff9f8a; }
+.lseat.empty { border-style: dashed; opacity: .75; font-weight: 400; cursor: pointer; }
+.lseat.me { box-shadow: 0 0 14px #ffd54a; }
+.lseat.new { animation: popIn .4s cubic-bezier(.3,1.5,.5,1); }
+.dots::after { content: ''; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+
+#toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translateX(-50%);
+  background: #222; color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 14px; z-index: 30;
+  box-shadow: 0 4px 14px rgba(0,0,0,.5); opacity: 0; pointer-events: none; max-width: 90vw; text-align: center; }
 </style>
 </head>
 <body>
 
 <div id="bar">
-  <div class="team us"><b>Your team</b><br>10s: <span id="t0">0</span> · Tricks: <span id="k0">0</span></div>
-  <div id="mid"><div id="trump">–</div><div id="tlabel">Trump</div><div id="rounds">Rounds 0–0</div></div>
-  <div class="team them"><b>Opponents</b><br>10s: <span id="t1">0</span> · Tricks: <span id="k1">0</span></div>
+  <div class="team us"><b id="lt0">Your team</b><br>10s: <span id="t0">0</span> · Tricks: <span id="k0">0</span></div>
+  <div id="mid"><div id="rounds">Rounds 0–0</div><button id="sndBar" class="sndBtn" onclick="toggleSound()">🔊</button> <button class="musBtn barBtn" onclick="toggleMusic()">🎵</button> <button id="leave2" onclick="leaveGame()">✕ Leave</button></div>
+  <div class="team them"><b id="lt1">Opponents</b><br>10s: <span id="t1">0</span> · Tricks: <span id="k1">0</span></div>
 </div>
 
 <div id="table">
-  <div class="seat" id="s0"><div class="name">You</div><div class="tens" id="x0"></div></div>
-  <div class="seat" id="s1"><div class="backs" id="b1"></div><div class="name">Left</div><div class="n" id="n1"></div><div class="tens" id="x1"></div></div>
-  <div class="seat" id="s2"><div class="backs" id="b2"></div><div class="name">Partner</div><div class="n" id="n2"></div><div class="tens" id="x2"></div></div>
-  <div class="seat" id="s3"><div class="backs" id="b3"></div><div class="name">Right</div><div class="n" id="n3"></div><div class="tens" id="x3"></div></div>
+  <div class="seat" id="s0"><div class="name" id="nm0">You</div><div class="tens" id="x0"></div></div>
+  <div class="seat" id="s1"><div class="backs" id="b1"></div><div class="name" id="nm1"></div><div class="n" id="n1"></div><div class="tens" id="x1"></div></div>
+  <div class="seat" id="s2"><div class="backs" id="b2"></div><div class="name" id="nm2"></div><div class="n" id="n2"></div><div class="tens" id="x2"></div></div>
+  <div class="seat" id="s3"><div class="backs" id="b3"></div><div class="name" id="nm3"></div><div class="n" id="n3"></div><div class="tens" id="x3"></div></div>
   <div id="shown"></div>
   <div id="spread"></div>
   <div class="drawn" id="d0"></div>
@@ -188,36 +373,82 @@ button:active { transform: translateY(3px); box-shadow: 0 1px 0 #0b3d23; }
 
 <div id="hand"></div>
 
-<div id="over">
-  <div id="box">
-    <h2>Dalcoat</h2>
-    <p>You and your <b>Partner</b> (top) play against <b>Left</b> and <b>Right</b>.</p>
-    <ul>
-      <li>Everyone picks a card from the deck. The <b>lowest card deals</b>.</li>
-      <li>The player next to the dealer gets 5 cards first and <b>shows one</b> to everyone. Its suit is the <b>trump</b>.</li>
-      <li>Capture tricks that contain the <b>10s</b>.</li>
-      <li>Follow the suit that was led if you can. Nobody stops you, but if you're <b>caught</b> breaking it, your team loses the round.</li>
-      <li>Highest trump wins, otherwise highest card of the led suit.</li>
-      <li>3 or 4 tens wins the round. At 2–2, the team with 7+ tricks wins.</li>
-    </ul>
-    <button onclick="startGame()">Start</button>
+<div id="over" class="hide"><div id="box"></div></div>
+
+<!-- ---------- Main menu ---------- -->
+<div id="menu">
+  <div id="sky"><div class="shoot"></div></div>
+  <svg class="mountains" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <polygon fill="#2a4f9e" points="0,100 0,58 9,44 17,52 28,22 37,38 46,30 57,46 70,14 81,36 90,28 100,40 100,100"/>
+    <polygon fill="#e8eeff" opacity=".85" points="28,22 24.5,31 27,29 29,32 31.5,29"/>
+    <polygon fill="#e8eeff" opacity=".85" points="70,14 66,24 69,22 71,25 74,21.5"/>
+    <polygon fill="#13306e" points="0,100 0,74 12,60 22,70 36,44 47,58 58,50 70,66 84,46 100,62 100,100"/>
+    <polygon fill="#fff" opacity=".9" points="36,44 32.5,51 35,49.5 37,52 39.5,49"/>
+    <polygon fill="#fff" opacity=".9" points="84,46 80.5,53 83,51.5 85,54 87.5,51"/>
+  </svg>
+  <div class="screen on" id="home">
+    <div class="flagwrap"><div class="pole"></div><div class="flag" id="flag"></div></div>
+    <div class="title" id="title"></div>
+    <div class="tag">♠ <b>♥</b> Catch the 10s <b>♦</b> ♣</div>
+    <div class="panel">
+      <label for="name">Your name</label>
+      <input class="txt" id="name" maxlength="14" placeholder="Enter your name" autocomplete="off">
+      <button class="btn gold" onclick="createRoom()">➕ Create room</button>
+      <div class="or">or join a friend</div>
+      <div class="row">
+        <input class="txt" id="code" maxlength="5" placeholder="CODE" autocomplete="off">
+        <button onclick="joinRoom()">Join</button>
+      </div>
+      <div class="or">or</div>
+      <button class="btn ghost" onclick="playSolo()">🤖 Play vs computer</button>
+    </div>
+    <p class="small" style="margin-top:14px">You and the player across from you are a team.</p>
+    <p class="credit" id="nowPlaying"></p>
+    <p class="credit">Music: Surya_2050, Pradeep Khanal &amp; Damgaz via Pixabay</p>
+  </div>
+
+  <div class="screen" id="lobby">
+    <div class="logo" style="font-size:34px">DALCOAT</div>
+    <div class="panel" style="margin-top:12px">
+      <div class="small">Room code</div>
+      <div class="code" id="codeTiles"></div>
+      <button class="btn ghost" style="margin-top:6px" onclick="shareInvite()">🔗 Share invite link</button>
+      <div class="mini-table" id="lseats"></div>
+      <div class="mode" id="lobbyMode"></div>
+      <div class="small">Tap an empty seat to move. Across from you is your partner. Empty seats are played by bots.</div>
+      <div id="lobbyAction"></div>
+      <button class="btn ghost" onclick="leaveGame(true)">Leave room</button>
+    </div>
+  </div>
+
+  <div class="screen" id="joining">
+    <div class="logo" style="font-size:34px">DALCOAT</div>
+    <div class="panel" style="margin-top:12px">
+      <p class="dots" id="joinText">Connecting</p>
+      <button class="btn ghost" onclick="leaveGame(true)">Cancel</button>
+    </div>
   </div>
 </div>
 
+<button id="sound" class="sndBtn" onclick="toggleSound()">🔊</button>
+<button id="music" class="musBtn" onclick="toggleMusic()">🎵</button>
+<div id="toast"></div>
+
 <script>
 const SUITS = ['♠', '♥', '♣', '♦'];
-const NAMES = ['You', 'Left', 'Partner', 'Right'];
+const BOT_NAMES = ['Arjun', 'Priya', 'Rahul', 'Anita', 'Vikram', 'Meera', 'Sanjay', 'Kavya'];
 const rankName = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' })[r] || String(r);
-const team = p => p % 2;           // 0 = you + partner, 1 = opponents
+const team = p => p % 2;           // seats 0 & 2 are a team, 1 & 3 are a team
+const same = (a, b) => a.s === b.s && a.r === b.r;
 const $ = id => document.getElementById(id);
 const wait = ms => new Promise(r => setTimeout(r, ms));
-// Seats go clockwise: 0 You (bottom) → 1 Left → 2 Partner (top) → 3 Right
+// Seats go clockwise 0 → 1 → 2 → 3. Everyone sees themselves at the bottom.
 
-let hands = [[], [], [], []], trick = [], turn = -1, trump = null, tens = [0, 0], tricks = [0, 0];
-let dealer = -1, match = [0, 0], fresh = null, phase = '';
-let trumpCard = null, chooser = -1;   // the card shown as trump and who showed it
-let renege = [];                      // suits you didn't follow while you still had them
-let pickResolve = null, chooseResolve = null;
+let me = 0;            // my seat number
+let isHost = false;
+let peer = null;       // PeerJS connection to the internet
+let hostConn = null;   // (guests) connection to the host
+let roomCode = '';
 
 function newDeck() {
   const d = [];
@@ -229,8 +460,783 @@ function newDeck() {
   return d;
 }
 
-function sortHand() {
-  hands[0].sort((a, b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || b.r - a.r);
+function beats(a, b, trumpSuit) {
+  if (a.s === b.s) return a.r > b.r;
+  return a.s === trumpSuit;
+}
+
+function winnerIdx(trick, trumpSuit) {
+  let w = 0;
+  for (let i = 1; i < trick.length; i++) if (beats(trick[i].c, trick[w].c, trumpSuit)) w = i;
+  return w;
+}
+
+/* =====================================================================
+   GAME ENGINE: runs only on the host's device and decides everything.
+   It sends events to every player; each player's screen animates them.
+   ===================================================================== */
+let E = null;
+
+function newEngine() {
+  return { seats: [null, null, null, null], started: false, dead: false, pending: null,
+           match: [0, 0], dealer: 0, chooser: 0, hands: [], trick: [], trump: null,
+           tens: [0, 0], tricks: [0, 0], renege: [], cutDeck: [], cutLeft: null, nextResolve: null };
+}
+
+// Send to a friend's phone over the internet
+function sendRemote(p, ev) {
+  const s = E && E.seats[p];
+  if (s && !s.bot && s.conn && s.conn.open && !E.dead) s.conn.send(ev);
+}
+// Is anyone playing on this device?
+const hasLocal = () => E.seats.some(s => s && s.local);
+function emit(ev) {
+  if (!E || E.dead) return;
+  for (let p = 0; p < 4; p++) sendRemote(p, ev);
+  if (hasLocal()) onEvent(ev);
+}
+
+// Pause the engine; stops for good if this game was left
+async function ewait(ms) {
+  const g = E;
+  await wait(ms);
+  if (E !== g || g.dead) throw 'stopped';
+}
+
+// Wait for a player's move (or let a bot think it over)
+function ask(p, kind) {
+  if (E.dead) return new Promise(() => {});
+  const g = E;
+  if (E.seats[p].bot) {
+    const think = kind === 'cut' ? 1600 + Math.random() * 700
+                : kind === 'choose' ? 1900 + Math.random() * 600
+                : 1100 + Math.random() * 600;
+    return wait(think).then(() => {
+      if (E !== g || g.dead) throw 'stopped';
+      return botAct(p, kind);
+    });
+  }
+  return new Promise(r => { E.pending = { p, kind, r }; });
+}
+
+function botAct(p, kind) {
+  if (kind === 'cut') { const left = [...E.cutLeft]; return left[Math.floor(Math.random() * left.length)]; }
+  if (kind === 'choose') return aiPower(p);
+  return aiChoose(p);
+}
+
+// A player's move arrives
+function handleAction(p, a) {
+  const pd = E && E.pending;
+  if (!pd || pd.p !== p || pd.kind !== a.a) return;
+  let v;
+  if (a.a === 'cut') { if (!E.cutLeft.has(a.idx)) return; v = a.idx; }
+  else { v = E.hands[p].find(c => same(c, a.card)); if (!v) return; }
+  E.pending = null;
+  pd.r(v);
+}
+
+async function runGame() {
+  E.started = true;
+  emit({ t: 'start', names: E.seats.map(s => s.name), bots: E.seats.map(s => !!s.bot) });
+  await ewait(400);
+
+  // Everyone picks a card from the spread; lowest deals
+  E.cutDeck = newDeck();
+  E.cutLeft = new Set(E.cutDeck.map((c, i) => i));
+  emit({ t: 'cutStart' });
+  await ewait(52 * 15 + 500);
+  let players = [0, 1, 2, 3];
+  while (true) {
+    const drawn = {};
+    for (const p of players) {
+      emit({ t: 'turn', p, kind: 'cut' });
+      const idx = await ask(p, 'cut');
+      E.cutLeft.delete(idx);
+      drawn[p] = E.cutDeck[idx];
+      emit({ t: 'cutPick', p, idx, card: drawn[p] });
+      await ewait(700);
+    }
+    const low = Math.min(...players.map(p => drawn[p].r));
+    const tied = players.filter(p => drawn[p].r === low);
+    if (tied.length === 1) { E.dealer = tied[0]; break; }
+    emit({ t: 'cutTie', tied });
+    await ewait(1900);
+    players = tied;
+  }
+  emit({ t: 'dealer', p: E.dealer });
+  await ewait(2700);
+
+  while (true) {
+    await runRound();
+    await new Promise(r => E.nextResolve = r);
+    E.dealer = (E.dealer + 1) % 4;   // the deal passes clockwise
+  }
+}
+
+async function runRound() {
+  E.hands = [[], [], [], []]; E.trick = []; E.trump = null; E.tens = [0, 0]; E.tricks = [0, 0];
+  E.renege = [[], [], [], []];
+  E.chooser = (E.dealer + 1) % 4;
+  emit({ t: 'roundStart', dealer: E.dealer, chooser: E.chooser, match: E.match });
+  await ewait(900);
+
+  const deck = newDeck();
+  const order = [1, 2, 3, 4].map(i => (E.dealer + i) % 4);   // clockwise, dealer last
+  const give = p => {
+    const c = deck.pop();
+    E.hands[p].push(c);
+    for (let q = 0; q < 4; q++) sendRemote(q, { t: 'deal', p, card: q === p ? c : null });
+    if (hasLocal()) onEvent({ t: 'deal', p, card: E.seats[p].local ? c : null });
+  };
+  const giveFive = async p => { for (let k = 0; k < 5; k++) { give(p); await ewait(80); } await ewait(500); };
+
+  // 5 cards to the first player, who shows a power card before anyone else gets cards
+  await giveFive(order[0]);
+  emit({ t: 'turn', p: E.chooser, kind: 'choose' });
+  const pc = await ask(E.chooser, 'choose');
+  E.trump = pc.s;
+  emit({ t: 'power', p: E.chooser, card: pc });
+  await ewait(3600);   // fly in, 2 seconds on show, fly back
+  for (const p of order.slice(1)) await giveFive(p);
+  while (deck.length) for (const p of order) { give(p); await ewait(100); }
+  await ewait(700);
+  emit({ t: 'dealt' });
+
+  let lead = E.chooser;
+  for (let n = 0; n < 13; n++) {
+    E.trick = [];
+    for (let i = 0; i < 4; i++) {
+      const p = (lead + i) % 4;
+      emit({ t: 'turn', p, kind: 'play' });
+      const c = await ask(p, 'play');
+
+      // Playing a suit you skipped earlier proves you had it: caught
+      const caught = E.renege[p].includes(c.s);
+      if (E.trick.length) {
+        const led = E.trick[0].c.s;
+        if (c.s !== led && E.hands[p].some(x => x.s === led) && !E.renege[p].includes(led)) E.renege[p].push(led);
+      }
+      E.hands[p].splice(E.hands[p].indexOf(c), 1);
+      E.trick.push({ p, c });
+      emit({ t: 'play', p, card: c });
+      await ewait(500);
+      if (caught) {
+        emit({ t: 'caught', p, suit: c.s });
+        await ewait(2200);
+        return endRound(1 - team(p), { p, suit: c.s });
+      }
+    }
+    const w = E.trick[winnerIdx(E.trick, E.trump)].p;
+    const won10 = E.trick.filter(x => x.c.r === 10).map(x => x.c);
+    E.tens[team(w)] += won10.length;
+    E.tricks[team(w)]++;
+    emit({ t: 'trick', w, won10, tens: E.tens, tricks: E.tricks });
+    await ewait(1700);
+    lead = w;
+  }
+  endRound();
+}
+
+function endRound(forced, caught) {
+  const win = forced !== undefined ? forced
+            : E.tens[0] >= 3 ? 0 : E.tens[1] >= 3 ? 1 : E.tricks[0] >= 7 ? 0 : 1;
+  E.match[win]++;
+  emit({ t: 'roundEnd', win, caught, tens: E.tens, tricks: E.tricks, match: E.match });
+}
+
+function hostNextRound() {
+  if (E && E.nextResolve) { const r = E.nextResolve; E.nextResolve = null; r(); }
+}
+
+// ---------- Computer players ----------
+const costOf = c => c.r + (c.r === 10 ? 20 : 0) + (c.s === E.trump ? 15 : 0);
+const cheapest = arr => arr.reduce((a, b) => costOf(b) < costOf(a) ? b : a);
+const notTen = arr => { const f = arr.filter(c => c.r !== 10); return f.length ? f : arr; };
+
+function aiPower(p) {
+  const h = E.hands[p];
+  const count = s => h.filter(c => c.s === s).length;
+  const suit = SUITS.filter(count).sort((a, b) => count(b) - count(a))[0];
+  return cheapest(notTen(h.filter(c => c.s === suit)));
+}
+
+function aiChoose(p) {
+  const hand = E.hands[p], trick = E.trick;
+  const L = trick.length && hand.some(c => c.s === trick[0].c.s) ? hand.filter(c => c.s === trick[0].c.s) : hand;
+
+  // Leading: cash an ace, otherwise lead something low
+  if (!trick.length) {
+    const ace = L.find(c => c.r === 14 && c.s !== E.trump);
+    return ace || cheapest(notTen(L));
+  }
+  const best = trick[winnerIdx(trick, E.trump)];
+  const last = trick.length === 3;
+  const hasTen = trick.some(x => x.c.r === 10);
+
+  // Partner is winning safely: feed them a 10 if we can
+  if (team(best.p) === team(p)) {
+    const safe = last || best.c.r === 14 || (best.c.s === E.trump && best.c.r >= 12);
+    const ten = L.find(c => c.r === 10);
+    if (safe && ten) return ten;
+    return cheapest(notTen(L));
+  }
+  // Opponent is winning: try to take it
+  const winners = L.filter(c => beats(c, best.c, E.trump));
+  if (winners.length && (last || hasTen || trick.length === 2)) {
+    if (last) { const t = winners.find(c => c.r === 10); if (t) return t; }
+    return cheapest(winners);
+  }
+  return cheapest(notTen(L));
+}
+
+/* =====================================================================
+   ONLINE: rooms, lobby and connections (PeerJS)
+   ===================================================================== */
+const myName = () => ($('name').value.trim() || 'Player').slice(0, 14);
+function saveName() { try { localStorage.setItem('dalcoat-name', $('name').value.trim()); } catch (e) {} }
+
+function makeCode() {
+  const A = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 5; i++) s += A[Math.floor(Math.random() * A.length)];
+  return s;
+}
+
+function onlineReady() {
+  if (typeof Peer === 'undefined') { toast('Online play needs an internet connection'); return false; }
+  return true;
+}
+
+function createRoom() {
+  if (!onlineReady()) return;
+  saveName();
+  isHost = true;
+  roomCode = makeCode();
+  showScreen('joining');
+  $('joinText').textContent = 'Creating room';
+  peer = new Peer('dalcoat-' + roomCode);
+  peer.on('open', () => {
+    E = newEngine();
+    E.seats[0] = { name: myName(), local: true };
+    me = 0;
+    showScreen('lobby');
+    broadcastLobby();
+  });
+  peer.on('connection', conn => {
+    conn.on('data', a => hostReceive(conn, a));
+    conn.on('close', () => hostDrop(conn));
+  });
+  peer.on('error', e => {
+    if (e.type === 'unavailable-id') { peer.destroy(); createRoom(); }
+    else { toast('Connection problem: ' + e.type); leaveGame(true); }
+  });
+}
+
+function hostReceive(conn, a) {
+  if (a.a === 'hello') {
+    if (E.started) { conn.send({ t: 'busy' }); return; }
+    const seat = E.seats.findIndex(s => !s);
+    if (seat < 0) { conn.send({ t: 'full' }); return; }
+    E.seats[seat] = { name: String(a.name).slice(0, 14), conn };
+    conn.seat = seat;
+    conn.send({ t: 'welcome', seat, code: roomCode });
+    shareMusic(conn);
+    broadcastLobby(seat);
+    return;
+  }
+  if (a.a === 'sit') { moveSeat(conn.seat, a.seat); return; }
+  if (conn.seat !== undefined) handleAction(conn.seat, a);
+}
+
+function hostDrop(conn) {
+  if (!E || conn.seat === undefined || !E.seats[conn.seat] || E.seats[conn.seat].conn !== conn) return;
+  const p = conn.seat;
+  if (!E.started) { E.seats[p] = null; broadcastLobby(); return; }
+  // Someone left mid-game: a bot takes over their seat
+  E.seats[p].bot = true;
+  E.seats[p].conn = null;
+  emit({ t: 'left', p });
+  if (E.pending && E.pending.p === p) {
+    const pd = E.pending;
+    E.pending = null;
+    wait(600).then(() => pd.r(botAct(p, pd.kind)));
+  }
+}
+
+function moveSeat(from, to) {
+  if (E.started || E.seats[to] || !E.seats[from]) return;
+  E.seats[to] = E.seats[from];
+  E.seats[from] = null;
+  if (E.seats[to].local) me = to;
+  else { E.seats[to].conn.seat = to; E.seats[to].conn.send({ t: 'seat', seat: to }); }
+  broadcastLobby(to);
+}
+
+function broadcastLobby(fresh) {
+  const ev = { t: 'lobby', code: roomCode, fresh, seats: E.seats.map(s => s ? { name: s.name } : null) };
+  for (let p = 0; p < 4; p++) sendRemote(p, ev);
+  onEvent(ev);
+}
+
+function joinRoom(codeArg) {
+  if (!onlineReady()) return;
+  const code = (codeArg || $('code').value).trim().toUpperCase();
+  if (code.length !== 5) { toast('Enter the 5-letter room code'); return; }
+  saveName();
+  isHost = false;
+  roomCode = code;
+  showScreen('joining');
+  $('joinText').textContent = 'Joining room ' + code;
+  peer = new Peer();
+  peer.on('open', () => {
+    hostConn = peer.connect('dalcoat-' + code, { reliable: true, serialization: 'json' });
+    hostConn.on('open', () => hostConn.send({ a: 'hello', name: myName() }));
+    hostConn.on('data', onEvent);
+    hostConn.on('close', () => { if (peer) hostGone(); });
+  });
+  peer.on('error', e => {
+    toast(e.type === 'peer-unavailable' ? 'Room ' + code + ' not found' : 'Connection problem: ' + e.type);
+    leaveGame(true);
+  });
+}
+
+// Send a move to the host (the seat is whoever's turn it is on this screen)
+function act(a) {
+  if (isHost) handleAction(me, a);
+  else if (hostConn && hostConn.open) hostConn.send(a);
+}
+
+// ---------- Playing alone against 3 bots ----------
+function playSolo() {
+  saveName();
+  isHost = true;
+  E = newEngine();
+  const bots = BOT_NAMES.filter(n => n !== myName()).sort(() => Math.random() - .5);
+  E.seats = [{ name: myName(), local: true }, { name: bots[0], bot: true },
+             { name: bots[1], bot: true }, { name: bots[2], bot: true }];
+  me = 0;
+  runGame().catch(() => {});
+}
+
+function startOnline() {
+  const used = E.seats.filter(Boolean).map(s => s.name);
+  const bots = BOT_NAMES.filter(n => !used.includes(n)).sort(() => Math.random() - .5);
+  for (let p = 0; p < 4; p++) if (!E.seats[p]) E.seats[p] = { name: bots.pop(), bot: true };
+  runGame().catch(() => {});
+}
+
+function hostGone() {
+  showResult('<h2>Host left 😕</h2><p>The game has ended.</p><button onclick="leaveGame(true)">Main menu</button>');
+}
+
+function leaveGame(skipConfirm) {
+  if (!skipConfirm && !confirm('Leave this game?')) return;
+  if (E) E.dead = true;
+  E = null;
+  V = null;
+  const p = peer;
+  peer = null; hostConn = null; isHost = false;
+  if (p) try { p.destroy(); } catch (e) {}
+  $('over').classList.add('hide');
+  $('menu').classList.remove('hide');
+  showScreen('home');
+  followHost = false;
+  startMusic('menu');
+}
+
+async function shareInvite() {
+  const url = location.origin + location.pathname + '?room=' + roomCode;
+  try {
+    if (navigator.share) { await navigator.share({ title: 'Dalcoat', text: 'Join my Dalcoat game! Room ' + roomCode, url }); return; }
+  } catch (e) { return; }
+  try { await navigator.clipboard.writeText(url); toast('Invite link copied!'); }
+  catch (e) { toast(url); }
+}
+
+/* =====================================================================
+   SCREEN: shows events from the host with animations
+   ===================================================================== */
+let V = null;          // what this device can see
+let fresh = null;
+
+function newView(names, bots) {
+  return { names, bots, mine: [false, false, false, false], hands: [[], [], [], []], counts: [0, 0, 0, 0],
+           tenCards: [[], [], [], []], drawn: {}, dealer: -1, chooser: -1, turn: -1, kind: null,
+           tens: [0, 0], tricks: [0, 0], match: [0, 0], spread: [] };
+}
+
+const vp = p => (p - me + 4) % 4;                // where seat p appears on my screen
+const solo = () => V.mine.filter(Boolean).length <= 1;   // one person on this device
+const isYou = p => solo() && p === me;
+const nm = p => isYou(p) ? 'You' : V.names[p];
+const seatEl = p => $('s' + vp(p));
+const handOrSeat = p => p === me ? $('hand') : seatEl(p);
+const teamName = t => V.names[t] + ' & ' + V.names[t + 2];
+
+function onEvent(ev) {
+  switch (ev.t) {
+    case 'welcome': me = ev.seat; roomCode = ev.code; followHost = true; showScreen('lobby'); break;
+    case 'seat': me = ev.seat; break;
+    case 'lobby': renderLobby(ev); break;
+    case 'busy': toast('That game has already started'); leaveGame(true); break;
+    case 'full': toast('That room is full'); leaveGame(true); break;
+    case 'music': playTrack(ev.scene, ev.idx, ev.pos + .25); break;
+    case 'start': onStart(ev); break;
+    case 'cutStart': onCutStart(); break;
+    case 'turn': onTurn(ev); break;
+    case 'cutPick':
+      V.drawn[ev.p] = ev.card;
+      showDrawn(ev.p, V.spread[ev.idx], ev.card);
+      break;
+    case 'cutTie':
+      for (const p of ev.tied) { $('d' + vp(p)).innerHTML = ''; delete V.drawn[p]; }
+      say('Tie! ' + ev.tied.map(nm).join(' & ') + ' pick again');
+      banner('Tie! Pick again', 1600);
+      break;
+    case 'dealer': onDealer(ev); break;
+    case 'roundStart': onRoundStart(ev); break;
+    case 'deal': onDeal(ev); break;
+    case 'power': onPower(ev); break;
+    case 'dealt': $('deck').style.display = 'none'; V.dealing = false; render(); break;
+    case 'play': onPlay(ev); break;
+    case 'caught':
+      say(nm(ev.p) + ' got caught! They had ' + ev.suit + ' but didn\'t follow suit');
+      banner('🚨 Caught! 🚨', 1800);
+      break;
+    case 'trick': onTrick(ev); break;
+    case 'roundEnd': onRoundEnd(ev); break;
+    case 'left':
+      V.bots[ev.p] = true;
+      say(V.names[ev.p] + ' left. A bot takes over.');
+      render();
+      break;
+  }
+}
+
+function onStart(ev) {
+  V = newView(ev.names, ev.bots);
+  // Seats played on this device (more than one when sharing a phone)
+  V.mine = [0, 1, 2, 3].map(p => isHost ? !!(E && E.seats[p].local) : p === me);
+  me = V.mine.indexOf(true);
+  $('menu').classList.add('hide');
+  $('over').classList.add('hide');
+  $('trick').innerHTML = '';
+  for (let i = 0; i < 4; i++) { $('x' + i).innerHTML = ''; $('d' + i).innerHTML = ''; }
+  if (!followHost) startMusic('game');
+  render();
+}
+
+function onCutStart() {
+  sound('shuffle');
+  const sp = $('spread');
+  sp.innerHTML = '';
+  sp.style.display = 'block';
+  V.spread = [];
+  for (let i = 0; i < 52; i++) {
+    const el = document.createElement('div');
+    el.className = 'back';
+    el.style.left = (i % 13) * 16 + 'px';
+    el.style.top = Math.floor(i / 13) * 38 + 'px';
+    el.onclick = () => {
+      if (V.turn === me && V.kind === 'cut') { V.kind = null; act({ a: 'cut', idx: i }); }
+    };
+    sp.appendChild(el);
+    V.spread.push(el);
+    el.animate([{ opacity: 0, transform: 'translateY(-30px) rotate(-20deg)' }, { opacity: 1, transform: 'none' }],
+               { duration: 350, delay: i * 15, fill: 'backwards' });
+  }
+}
+
+function onTurn(ev) {
+  const p = ev.p;
+  V.turn = p;
+  V.kind = ev.kind;
+  render();
+  const mine = V.mine[p];
+  const who = solo() ? 'You' : V.names[p];
+  if (ev.kind === 'cut') say(mine ? (solo() ? 'Tap any card. Lowest card deals' : V.names[p] + ': tap any card') : V.names[p] + ' is picking...');
+  if (ev.kind === 'choose') {
+    say(mine ? who + ': tap 1 card to show as the power card' : V.names[p] + ' is choosing the power card...');
+    if (mine) banner('Choose the power card', 1500);
+  }
+  if (ev.kind === 'play') say(mine ? (solo() ? 'Your turn' : V.names[p] + "'s turn") : V.names[p] + "'s turn");
+}
+
+// Flip a picked card over and move it next to the player
+function showDrawn(p, backEl, card) {
+  sound('flip');
+  const src = backEl.getBoundingClientRect();
+  backEl.remove();
+  const el = cardEl(card);
+  $('d' + vp(p)).appendChild(el);
+  const dst = el.getBoundingClientRect();
+  el.animate([
+    { transform: `translate(${src.left - dst.left}px, ${src.top - dst.top}px) scale(.55) rotateY(90deg)` },
+    { transform: 'none' }
+  ], { duration: 450, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+
+async function onDealer(ev) {
+  V.dealer = ev.p;
+  V.cutDone = true;
+  V.turn = -1;
+  const d = $('d' + vp(ev.p)).firstChild;
+  if (d) d.classList.add('win');
+  render();
+  say(nm(ev.p) + ' got the lowest card');
+  banner(nm(ev.p) + (isYou(ev.p) ? ' deal' : ' deals'), 1800);
+  await wait(2000);
+  const leftovers = [...$('spread').children, ...document.querySelectorAll('.drawn .card')];
+  await Promise.all(leftovers.map(el =>
+    el.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.5)' }], { duration: 400, fill: 'forwards' }).finished));
+  if (!V) return;
+  V.drawn = {};
+  $('spread').innerHTML = '';
+  $('spread').style.display = 'none';
+  for (let i = 0; i < 4; i++) $('d' + i).innerHTML = '';
+}
+
+function onRoundStart(ev) {
+  V.hands = [[], [], [], []]; V.counts = [0, 0, 0, 0]; V.tens = [0, 0]; V.tricks = [0, 0];
+  V.tenCards = [[], [], [], []];
+  V.dealer = ev.dealer; V.chooser = ev.chooser; V.match = [...ev.match];
+  V.turn = -1; V.kind = null;
+  $('over').classList.add('hide');
+  $('trick').innerHTML = '';
+  for (let i = 0; i < 4; i++) $('x' + i).innerHTML = '';
+  $('deck').className = 'at' + vp(V.dealer);
+  $('deck').style.display = 'block';
+  V.dealing = true;
+  sound('shuffle');
+  render();
+  say(nm(V.dealer) + (isYou(V.dealer) ? ' are dealing...' : ' is dealing...'));
+}
+
+function onDeal(ev) {
+  sound('deal');
+  $('deck').animate([{ transform: 'translateY(-3px)' }, { transform: 'none' }], { duration: 120 });
+  flyBack($('deck').getBoundingClientRect(), handOrSeat(ev.p).getBoundingClientRect()).then(() => {
+    if (!V) return;
+    if (ev.card && V.mine[ev.p]) {
+      V.hands[ev.p].push(ev.card);
+      sortHand(ev.p);
+      if (ev.p === me) fresh = ev.card;
+    } else V.counts[ev.p]++;
+    render();
+  });
+}
+
+// The power card is shown face up to everyone for 2 seconds, then goes back to its owner
+async function onPower(ev) {
+  const p = ev.p, c = ev.card;
+  V.kind = null;
+  const from = p === me ? handCardEl(c) || $('hand') : seatEl(p);
+  const src = from.getBoundingClientRect();
+  const shown = $('shown');
+  shown.innerHTML = '';
+  shown.style.display = 'block';
+  sound('flip');
+  const el = cardEl(c);
+  shown.appendChild(el);
+  const dst = el.getBoundingClientRect();
+  await el.animate([
+    { transform: `translate(${src.left + src.width / 2 - dst.left - dst.width / 2}px, ${src.top + src.height / 2 - dst.top - dst.height / 2}px) scale(.4) rotateY(90deg)` },
+    { transform: 'none' }
+  ], { duration: 550, easing: 'cubic-bezier(.2,.8,.3,1)' }).finished;
+
+  say(nm(p) + ' chose ' + rankName(c.r) + c.s + ' as the power card');
+  banner('Power card: <span style="color:' + (c.s === '♥' || c.s === '♦' ? '#ff6b6b' : '#fff') +
+         ';font-size:28px">' + c.s + '</span>', 2000);
+  await wait(2000);
+
+  const back = (p === me ? $('hand') : seatEl(p)).getBoundingClientRect();
+  const now = el.getBoundingClientRect();
+  await el.animate([
+    { transform: 'none', opacity: 1 },
+    { transform: `translate(${back.left + back.width / 2 - now.left - now.width / 2}px, ${back.top + back.height / 2 - now.top - now.height / 2}px) scale(.4)`, opacity: 0 }
+  ], { duration: 450, easing: 'ease-in', fill: 'forwards' }).finished;
+  shown.style.display = 'none';
+  shown.innerHTML = '';
+  if (V) { V.turn = -1; render(); }
+}
+
+function onPlay(ev) {
+  const p = ev.p, c = ev.card;
+  const from = p === me ? handCardEl(c) || $('hand') : seatEl(p);
+  const src = from.getBoundingClientRect();
+  if (V.mine[p]) V.hands[p] = V.hands[p].filter(x => !same(x, c));
+  else V.counts[p]--;
+  V.turn = -1; V.kind = null;
+  render();
+  sound('play');
+
+  const el = cardEl(c);
+  el.classList.add('p' + vp(p));
+  el.dataset.p = p;
+  el.style.rotate = (Math.random() * 14 - 7) + 'deg';
+  $('trick').appendChild(el);
+  const dst = el.getBoundingClientRect();
+  const dx = src.left + src.width / 2 - dst.left - dst.width / 2;
+  const dy = src.top + src.height / 2 - dst.top - dst.height / 2;
+  const other = p !== me;
+  el.animate([
+    { transform: `translate(${dx}px, ${dy}px) scale(${other ? .4 : 1}) rotate(${other ? 180 : 0}deg)`, opacity: other ? 0 : 1 },
+    { transform: 'none', opacity: 1 }
+  ], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
+}
+
+async function onTrick(ev) {
+  const w = ev.w;
+  const els = [...$('trick').children];
+  const winEl = els.find(el => +el.dataset.p === w);
+  if (winEl) winEl.classList.add('win');
+  await wait(900);
+
+  // Sweep the cards to the winner (10s go to their face-up pile)
+  sound('sweep');
+  const pile = seatEl(w).getBoundingClientRect();
+  const hand = handOrSeat(w).getBoundingClientRect();
+  await Promise.all(els.map(el => {
+    const to = el.classList.contains('ten') ? pile : hand;
+    const r = el.getBoundingClientRect();
+    const dx = to.left + to.width / 2 - r.left - r.width / 2;
+    const dy = to.top + to.height / 2 - r.top - r.height / 2;
+    return el.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: `translate(${dx}px, ${dy}px) scale(.3)`, opacity: 0 }
+    ], { duration: 450, easing: 'ease-in', fill: 'forwards' }).finished;
+  }));
+  els.forEach(el => el.remove());
+  if (!V) return;
+
+  for (const c of ev.won10) {
+    V.tenCards[w].push(c);
+    const el = cardEl(c);
+    $('x' + vp(w)).appendChild(el);
+    el.animate([{ transform: 'scale(2.2)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+               { duration: 450, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+  }
+  V.tens = [...ev.tens];
+  V.tricks = [...ev.tricks];
+  const n10 = ev.won10.length;
+  say(nm(w) + ' won the trick' + (n10 ? ' with ' + n10 + (n10 > 1 ? ' tens!' : ' ten!') : ''));
+  render();
+  const side = team(w) === leftTeam() ? 0 : 1;
+  pop($('k' + side));
+  if (n10) pop($('t' + side));
+}
+
+function onRoundEnd(ev) {
+  V.match = [...ev.match];
+  V.turn = -1;
+  render();
+  const lt = leftTeam(), rt = 1 - lt;
+  const weWon = ev.win === team(me);
+
+  let badge = '';
+  if (ev.caught) badge = '🚨 ' + nm(ev.caught.p) + (isYou(ev.caught.p) ? ' were' : ' was') +
+                         ' caught not following ' + ev.caught.suit;
+  else if (ev.tricks[ev.win] === 13) badge = '🏆 ALL 13 TRICKS';
+  else if (ev.tens[ev.win] === 4) badge = '🔥 ALL FOUR 10s';
+
+  // The 10s each team captured, shown as little cards
+  const tensOf = t => [t, t + 2].flatMap(p => V.tenCards[p]);
+  const teamBox = (t, label) => {
+    const cards = tensOf(t).map((c, i) => {
+      const el = cardEl(c);
+      el.style.animationDelay = (.5 + i * .15) + 's';
+      return el.outerHTML;
+    }).join('') || '<span class="none">no 10s</span>';
+    return '<div class="res-team' + (t === ev.win ? ' won' : '') + '">' +
+      (t === ev.win ? '<div class="crown">👑</div>' : '') +
+      '<div class="tn" style="color:' + (t === team(me) ? '#7fd6ff' : '#ff9f8a') + '">' + label + '</div>' +
+      '<div class="sub">' + teamName(t) + '</div>' +
+      '<div class="num" data-to="' + ev.tens[t] + '">0</div><div class="lbl">tens</div>' +
+      '<div class="mini">' + cards + '</div>' +
+      '<div class="bar"><i style="--w:' + (ev.tricks[t] / 13 * 100) + '%"></i></div>' +
+      '<div class="lbl"><b data-to="' + ev.tricks[t] + '">0</b> / 13 tricks</div>' +
+      '</div>';
+  };
+  const title = solo() ? (weWon ? 'VICTORY!' : 'DEFEAT') : teamName(ev.win) + ' win!';
+
+  showResult(
+    '<div class="res-glow"></div>' +
+    '<div class="res-icon">' + (weWon || !solo() ? '🏆' : '💔') + '</div>' +
+    '<div class="res-title' + (weWon || !solo() ? '' : ' lost') + '">' + title + '</div>' +
+    '<div class="res-sub">' + (solo() ? (weWon ? 'Your team wins the round' : 'The opponents take this round') : 'wins the round') + '</div>' +
+    (badge ? '<div class="res-badge">' + badge + '</div>' : '') +
+    '<div class="res-teams">' + teamBox(lt, solo() ? 'YOUR TEAM' : 'TEAM 1') +
+      '<div class="vs">VS</div>' + teamBox(rt, solo() ? 'OPPONENTS' : 'TEAM 2') + '</div>' +
+    '<div class="res-rounds"><div class="lbl">ROUNDS WON</div>' +
+      '<div class="score"><span style="color:#7fd6ff">' + ev.match[lt] + '</span><i>:</i><span style="color:#ff9f8a">' + ev.match[rt] + '</span></div></div>' +
+    (isHost ? '<button class="btn res-next" onclick="hostNextRound()">▶ Next round</button>'
+            : '<p class="wait dots">Waiting for the host</p>'), 'result');
+
+  // Count the numbers up
+  for (const el of $('box').querySelectorAll('[data-to]')) {
+    const to = +el.dataset.to;
+    for (let i = 0; i <= to; i++) setTimeout(() => { el.textContent = i; }, 400 + i * (to > 5 ? 60 : 180));
+  }
+  if (weWon || !solo()) confetti();
+  sound(weWon || !solo() ? 'win' : 'lose');
+}
+
+// A burst of confetti in Nepal flag colors and gold
+function confetti() {
+  const box = document.createElement('div');
+  box.className = 'confetti';
+  const colors = ['#dc143c', '#003893', '#fff', '#ffd54a', '#ff4d6d', '#7fd6ff'];
+  for (let i = 0; i < 70; i++) {
+    const c = document.createElement('i');
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.width = 6 + Math.random() * 6 + 'px';
+    c.style.height = 8 + Math.random() * 10 + 'px';
+    c.style.animationDuration = 2.2 + Math.random() * 2 + 's';
+    c.style.animationDelay = Math.random() * .8 + 's';
+    c.style.setProperty('--x', (Math.random() * 160 - 80) + 'px');
+    c.style.setProperty('--r', (Math.random() * 1080 - 540) + 'deg');
+    box.appendChild(c);
+  }
+  $('over').appendChild(box);
+  setTimeout(() => box.remove(), 5500);
+}
+
+function showResult(html, cls) {
+  $('box').className = cls || '';
+  $('box').innerHTML = html;
+  $('over').classList.remove('hide');
+}
+
+// A card in the hand at the bottom is tapped
+function tapCard(c) {
+  if (!V || V.turn !== me) return;
+  if (V.kind === 'choose') { V.kind = null; act({ a: 'choose', card: c }); }
+  else if (V.kind === 'play') { V.kind = null; act({ a: 'play', card: c }); }
+}
+
+// ---------- Drawing ----------
+function sortHand(p) {
+  V.hands[p].sort((a, b) => SUITS.indexOf(a.s) - SUITS.indexOf(b.s) || b.r - a.r);
+}
+
+function handCardEl(c) {
+  const i = V.hands[me].findIndex(x => same(x, c));
+  return i >= 0 ? $('hand').children[i] : null;
+}
+
+function cardEl(c) {
+  const R = rankName(c.r), face = c.r > 10 && c.r < 14;
+  const el = document.createElement('div');
+  el.className = 'card' + (c.s === '♥' || c.s === '♦' ? ' red' : '') +
+    (face ? ' face' : '') + (c.r === 14 ? ' ace' : '') + (c.r === 10 ? ' ten' : '');
+  const corner = '<b>' + R + '</b><i>' + c.s + '</i>';
+  el.innerHTML =
+    '<div class="c tl">' + corner + '</div>' +
+    '<div class="pip">' + (face ? '<span>' + R + c.s + '</span>' : c.s) + '</div>' +
+    '<div class="c br">' + corner + '</div>';
+  return el;
 }
 
 // A face-down card flying between two spots on screen
@@ -244,400 +1250,15 @@ function flyBack(a, b, ms = 350) {
   ], { duration: ms, easing: 'ease-out' }).finished.then(() => el.remove());
 }
 
-// ---------- Picking the dealer ----------
-async function startGame() {
-  $('over').classList.add('hide');
-  phase = 'pick';
-  render();
-
-  // Spread all 52 cards face down in the middle
-  const sp = $('spread');
-  sp.innerHTML = '';
-  sp.style.display = 'block';
-  newDeck().forEach((c, i) => {
-    const el = document.createElement('div');
-    el.className = 'back';
-    el.style.left = (i % 13) * 16 + 'px';
-    el.style.top = Math.floor(i / 13) * 38 + 'px';
-    el.card = c;
-    el.onclick = () => { if (pickResolve) pickResolve(el); };
-    sp.appendChild(el);
-    el.animate([{ opacity: 0, transform: 'translateY(-30px) rotate(-20deg)' }, { opacity: 1, transform: 'none' }],
-               { duration: 350, delay: i * 15, fill: 'backwards' });
-  });
-  await wait(52 * 15 + 400);
-
-  let players = [0, 1, 2, 3];
-  while (true) {
-    const drawn = {};
-    for (const p of players) $('d' + p).innerHTML = '';
-    for (const p of players) {
-      $('s' + p).classList.add('active');
-      let el;
-      if (p === 0) {
-        say('Tap any card. Lowest card deals');
-        el = await new Promise(r => pickResolve = r);
-        pickResolve = null;
-      } else {
-        say(NAMES[p] + ' is picking...');
-        await wait(700);
-        const left = [...sp.children];
-        el = left[Math.floor(Math.random() * left.length)];
-      }
-      $('s' + p).classList.remove('active');
-      drawn[p] = el.card;
-      showDrawn(p, el);
-      await wait(500);
-    }
-    const low = Math.min(...players.map(p => drawn[p].r));
-    const tied = players.filter(p => drawn[p].r === low);
-    if (tied.length === 1) { dealer = tied[0]; break; }
-    say('Tie! ' + tied.map(p => NAMES[p]).join(' & ') + ' pick again');
-    banner('Tie! Pick again', 1600);
-    await wait(1800);
-    players = tied;
-  }
-
-  $('d' + dealer).firstChild.classList.add('win');
-  render();
-  say(NAMES[dealer] + ' got the lowest card');
-  banner(NAMES[dealer] + (dealer ? ' deals' : ' deal'), 1800);
-  await wait(2000);
-
-  // Clear the table
-  const leftovers = [...sp.children, ...document.querySelectorAll('.drawn .card')];
-  await Promise.all(leftovers.map(el =>
-    el.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(.5)' }], { duration: 400, fill: 'forwards' }).finished));
-  sp.innerHTML = '';
-  sp.style.display = 'none';
-  for (let p = 0; p < 4; p++) $('d' + p).innerHTML = '';
-  startRound();
-}
-
-// Flip a picked card over and move it next to the player
-function showDrawn(p, backEl) {
-  const src = backEl.getBoundingClientRect();
-  backEl.remove();
-  const el = cardEl(backEl.card);
-  $('d' + p).appendChild(el);
-  const dst = el.getBoundingClientRect();
-  el.animate([
-    { transform: `translate(${src.left - dst.left}px, ${src.top - dst.top}px) scale(.55) rotateY(90deg)` },
-    { transform: 'none' }
-  ], { duration: 450, easing: 'cubic-bezier(.2,.8,.3,1)' });
-}
-
-// ---------- Dealing ----------
-async function startRound() {
-  $('over').classList.add('hide');
-  hands = [[], [], [], []]; trick = []; trump = null; tens = [0, 0]; tricks = [0, 0]; turn = -1;
-  trumpCard = null; renege = []; phase = 'deal';
-  chooser = (dealer + 1) % 4;
-  $('trick').innerHTML = '';
-  for (let p = 0; p < 4; p++) $('x' + p).innerHTML = '';
-  for (let p = 0; p < 4; p++) $('s' + p).classList.toggle('active', p === dealer);
-  $('deck').className = 'at' + dealer;
-  $('deck').style.display = 'block';
-  render();
-  say(NAMES[dealer] + (dealer ? ' is dealing...' : ' are dealing...'));
-  await wait(500);
-
-  const deck = newDeck();
-  const order = [1, 2, 3, 4].map(i => (dealer + i) % 4);   // clockwise, dealer last
-
-  // 5 cards to the first player, who shows a trump before anyone else gets cards
-  await giveFive(order[0], deck);
-  await chooseTrump();
-  for (const p of order.slice(1)) await giveFive(p, deck);
-
-  // Then 1 card at a time until everyone has 13
-  while (deck.length) {
-    for (const p of order) { giveCard(p, deck.pop()); await wait(100); }
-  }
-  await wait(600);
-  $('deck').style.display = 'none';
-  $('s' + dealer).classList.remove('active');
-
-  phase = 'play';
-  turn = chooser;
-  say(NAMES[turn] + (turn ? ' leads first' : ' lead first'));
-  next();
-}
-
-async function giveFive(p, deck) {
-  for (let k = 0; k < 5; k++) { giveCard(p, deck.pop()); await wait(80); }
-  await wait(450);
-}
-
-function giveCard(p, c) {
-  const to = p === 0 ? $('hand') : $('s' + p);
-  $('deck').animate([{ transform: 'translateY(-3px)' }, { transform: 'none' }], { duration: 120 });
-  flyBack($('deck').getBoundingClientRect(), to.getBoundingClientRect()).then(() => {
-    hands[p].push(c);
-    if (p === 0) { sortHand(); fresh = c; }
-    render();
-  });
-}
-
-// The first player looks at their 5 cards and shows one to everyone as trump
-async function chooseTrump() {
-  const p = chooser;
-  $('s' + dealer).classList.remove('active');
-  $('s' + p).classList.add('active');
-  let c, from;
-  if (p === 0) {
-    phase = 'choose';
-    say('Tap 1 card to show as trump');
-    banner('Choose the trump', 1500);
-    [c, from] = await new Promise(r => chooseResolve = r);
-    chooseResolve = null;
-    phase = 'deal';
-  } else {
-    say(NAMES[p] + ' is choosing the trump...');
-    await wait(1300);
-    c = aiTrump(p);
-    from = $('s' + p);
-  }
-
-  // Show the card face up in the middle of the table
-  const src = from.getBoundingClientRect();
-  const shown = $('shown');
-  shown.innerHTML = '';
-  shown.style.display = 'block';
-  const el = cardEl(c);
-  shown.appendChild(el);
-  const dst = el.getBoundingClientRect();
-  await el.animate([
-    { transform: `translate(${src.left + src.width / 2 - dst.left - dst.width / 2}px, ${src.top + src.height / 2 - dst.top - dst.height / 2}px) scale(.4) rotateY(90deg)` },
-    { transform: 'none' }
-  ], { duration: 550, easing: 'cubic-bezier(.2,.8,.3,1)' }).finished;
-
-  trump = c.s;
-  trumpCard = c;
-  say(NAMES[p] + ' chose ' + rankName(c.r) + c.s + ' as trump');
-  announceTrump();
-  render();
-  await wait(1800);
-
-  // The card goes back to the player's hand; the top bar keeps showing it
-  const back = src;
-  const now = el.getBoundingClientRect();
-  await el.animate([
-    { transform: 'none', opacity: 1 },
-    { transform: `translate(${back.left + back.width / 2 - now.left - now.width / 2}px, ${back.top + back.height / 2 - now.top - now.height / 2}px) scale(.4)`, opacity: 0 }
-  ], { duration: 450, easing: 'ease-in', fill: 'forwards' }).finished;
-  shown.style.display = 'none';
-  shown.innerHTML = '';
-  $('s' + p).classList.remove('active');
-  $('s' + dealer).classList.add('active');
-}
-
-// Computer shows a low card from its longest suit
-function aiTrump(p) {
-  const h = hands[p];
-  const count = s => h.filter(c => c.s === s).length;
-  const suit = SUITS.filter(count).sort((a, b) => count(b) - count(a))[0];
-  return cheapest(notTen(h.filter(c => c.s === suit)));
-}
-
-// ---------- Rules ----------
-function legal(p) {
-  if (!trick.length) return hands[p];
-  const same = hands[p].filter(c => c.s === trick[0].c.s);
-  return same.length ? same : hands[p];
-}
-
-// Does card a beat card b? (b is the card currently winning the trick)
-function beats(a, b, trumpSuit) {
-  if (a.s === b.s) return a.r > b.r;
-  return a.s === trumpSuit;
-}
-
-function winnerIdx() {
-  let w = 0;
-  for (let i = 1; i < trick.length; i++) if (beats(trick[i].c, trick[w].c, trump)) w = i;
-  return w;
-}
-
-// ---------- Playing ----------
-function play(p, c, from) {
-  const src = (from || $('s' + p)).getBoundingClientRect();
-
-  // You played a suit you skipped earlier: that proves you had it
-  const caught = p === 0 && renege.includes(c.s);
-  // You didn't follow suit even though you could
-  if (p === 0 && trick.length) {
-    const led = trick[0].c.s;
-    if (c.s !== led && hands[0].some(x => x.s === led) && !renege.includes(led)) renege.push(led);
-  }
-
-  hands[p].splice(hands[p].indexOf(c), 1);
-  trick.push({ p, c });
-
-  // Fly the card from the player to the table
-  const el = cardEl(c);
-  el.classList.add('p' + p);
-  el.style.rotate = (Math.random() * 14 - 7) + 'deg';
-  $('trick').appendChild(el);
-  const dst = el.getBoundingClientRect();
-  const dx = src.left + src.width / 2 - dst.left - dst.width / 2;
-  const dy = src.top + src.height / 2 - dst.top - dst.height / 2;
-  el.animate([
-    { transform: `translate(${dx}px, ${dy}px) scale(${p ? .4 : 1}) rotate(${p ? 180 : 0}deg)`, opacity: p ? 0 : 1 },
-    { transform: 'none', opacity: 1 }
-  ], { duration: 420, easing: 'cubic-bezier(.2,.8,.3,1)' });
-
-  if (caught) {
-    turn = -1;
-    render();
-    say('Caught! You had ' + c.s + ' when you didn\'t follow suit');
-    banner('🚨 Caught! 🚨', 1800);
-    setTimeout(() => endRound(1, 'You were caught not following suit (' + c.s + ').'), 2000);
-    return;
-  }
-
-  if (trick.length === 4) {
-    turn = -1;
-    render();
-    setTimeout(endTrick, 550);
-  } else {
-    turn = (p + 1) % 4;
-    next();
-  }
-}
-
-function next() {
-  render();
-  if (turn > 0) setTimeout(() => { if (turn > 0) play(turn, aiChoose(turn)); }, 750);
-}
-
-async function endTrick() {
-  const wi = winnerIdx(), w = trick[wi].p;
-  const els = [...$('trick').children];
-  els[wi].classList.add('win');
-  await wait(900);
-
-  // Sweep the cards to the winner (10s go to their face-up pile)
-  const pile = (w === 0 ? $('s0') : $('s' + w)).getBoundingClientRect();
-  const hand = (w === 0 ? $('hand') : $('s' + w)).getBoundingClientRect();
-  await Promise.all(els.map((el, i) => {
-    const to = trick[i].c.r === 10 ? pile : hand;
-    const r = el.getBoundingClientRect();
-    const dx = to.left + to.width / 2 - r.left - r.width / 2;
-    const dy = to.top + to.height / 2 - r.top - r.height / 2;
-    return el.animate([
-      { transform: 'none', opacity: 1 },
-      { transform: `translate(${dx}px, ${dy}px) scale(.3)`, opacity: 0 }
-    ], { duration: 450, easing: 'ease-in', fill: 'forwards' }).finished;
-  }));
-  $('trick').innerHTML = '';
-
-  const won10 = trick.filter(x => x.c.r === 10);
-  const n10 = won10.length;
-  tens[team(w)] += n10;
-  for (const x of won10) {
-    const el = cardEl(x.c);
-    $('x' + w).appendChild(el);
-    el.animate([{ transform: 'scale(2.2)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-               { duration: 450, easing: 'cubic-bezier(.3,1.5,.5,1)' });
-  }
-  tricks[team(w)]++;
-  say(NAMES[w] + (w === 0 ? ' win' : ' wins') + ' the trick' +
-      (n10 ? ' with ' + n10 + (n10 > 1 ? ' tens!' : ' ten!') : ''));
-  trick = [];
-  turn = w;
-  render();
-  pop($('k' + team(w)));
-  if (n10) pop($('t' + team(w)));
-
-  if (hands[0].length === 0) setTimeout(endRound, 600);
-  else next();
-}
-
-function endRound(forced, note) {
-  phase = '';
-  turn = -1;
-  const win = forced !== undefined ? forced
-            : tens[0] >= 3 ? 0 : tens[1] >= 3 ? 1 : tricks[0] >= 7 ? 0 : 1;
-  match[win]++;
-  let extra = note || '';
-  if (!note && tricks[win] === 13) extra = '🏆 Whitewash: all 13 tricks!';
-  else if (!note && tens[win] === 4) extra = '🔥 Mendikot: all four 10s!';
-  $('box').innerHTML =
-    '<h2>' + (win === 0 ? 'Your team wins! 🎉' : 'Opponents win 😬') + '</h2>' +
-    (extra ? '<p class="big"><b>' + extra + '</b></p>' : '') +
-    '<p class="big">10s: ' + tens[0] + ' – ' + tens[1] + '<br>Tricks: ' + tricks[0] + ' – ' + tricks[1] + '</p>' +
-    '<p class="big">Rounds won: <b>' + match[0] + ' – ' + match[1] + '</b></p>' +
-    '<button onclick="nextRound()">Next round</button>';
-  $('over').classList.remove('hide');
-  render();
-}
-
-// The deal passes clockwise each round
-function nextRound() {
-  dealer = (dealer + 1) % 4;
-  startRound();
-}
-
-// You tap a card in your hand
-function tap(c, el) {
-  if (phase === 'choose' && chooseResolve) return chooseResolve([c, el]);
-  if (phase !== 'play' || turn !== 0) return;
-  play(0, c, el);
-}
-
-// ---------- Computer players ----------
-// How "costly" a card is to give away: tens and trumps are precious.
-const cost = c => c.r + (c.r === 10 ? 20 : 0) + (c.s === trump ? 15 : 0);
-const cheapest = arr => arr.reduce((a, b) => cost(b) < cost(a) ? b : a);
-const notTen = arr => { const f = arr.filter(c => c.r !== 10); return f.length ? f : arr; };
-
-function aiChoose(p) {
-  const L = legal(p);
-
-  // Leading: cash an ace, otherwise lead something low
-  if (!trick.length) {
-    const ace = L.find(c => c.r === 14 && c.s !== trump);
-    return ace || cheapest(notTen(L));
-  }
-
-  const best = trick[winnerIdx()];
-  const last = trick.length === 3;
-  const hasTen = trick.some(x => x.c.r === 10);
-  const wins = c => beats(c, best.c, trump);
-
-  // Partner is winning safely: feed them a 10 if we can
-  if (team(best.p) === team(p)) {
-    const safe = last || best.c.r === 14 || (best.c.s === trump && best.c.r >= 12);
-    const ten = L.find(c => c.r === 10);
-    if (safe && ten) return ten;
-    return cheapest(notTen(L));
-  }
-
-  // Opponent is winning: try to take it
-  const winners = L.filter(wins);
-  if (winners.length && (last || hasTen || trick.length === 2)) {
-    if (last) { const t = winners.find(c => c.r === 10); if (t) return t; }
-    return cheapest(winners);
-  }
-  return cheapest(notTen(L));
-}
-
-// ---------- Drawing ----------
-function cardEl(c) {
-  const R = rankName(c.r), face = c.r > 10 && c.r < 14;
-  const el = document.createElement('div');
-  el.className = 'card' + (c.s === '♥' || c.s === '♦' ? ' red' : '') +
-    (face ? ' face' : '') + (c.r === 14 ? ' ace' : '');
-  const corner = '<b>' + R + '</b><i>' + c.s + '</i>';
-  el.innerHTML =
-    '<div class="c tl">' + corner + '</div>' +
-    '<div class="pip">' + (face ? '<span>' + R + c.s + '</span>' : c.s) + '</div>' +
-    '<div class="c br">' + corner + '</div>';
-  return el;
-}
-
 function say(t) { $('msg').textContent = t; }
+
+function toast(t) {
+  const el = $('toast');
+  el.textContent = t;
+  el.animate([{ opacity: 0, transform: 'translate(-50%, -10px)' }, { opacity: 1, transform: 'translate(-50%, 0)', offset: .1 },
+              { opacity: 1, transform: 'translate(-50%, 0)', offset: .85 }, { opacity: 0, transform: 'translate(-50%, 0)' }],
+             { duration: 3000 });
+}
 
 function pop(el) {
   el.animate([{ transform: 'scale(1.9)', color: '#ffd54a' }, { transform: 'scale(1)' }],
@@ -649,62 +1270,289 @@ function banner(html, ms) {
   b.innerHTML = html;
   b.animate([
     { opacity: 0, transform: 'translate(-50%, -50%) scale(.5)' },
-    { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)', offset: .2 },
-    { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .8 },
+    { opacity: 1, transform: 'translate(-50%, -50%) scale(1.05)', offset: .15 },
+    { opacity: 1, transform: 'translate(-50%, -50%) scale(1)', offset: .85 },
     { opacity: 0, transform: 'translate(-50%, -50%) scale(.9)' }
   ], { duration: ms, easing: 'ease-out' });
 }
 
-function announceTrump() {
-  const t = $('trump');
-  t.animate([{ transform: 'scale(3) rotate(-30deg)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-            { duration: 650, easing: 'cubic-bezier(.3,1.6,.5,1)' });
-  banner('Trump: <span style="color:' + (trump === '♥' || trump === '♦' ? '#ff6b6b' : '#fff') +
-         ';font-size:28px">' + trump + '</span>', 1500);
-}
+// Left side of the score bar: my team, or team 1 when several people share the phone
+const leftTeam = () => solo() ? team(me) : 0;
 
 function render() {
-  for (const t of [0, 1]) { $('t' + t).textContent = tens[t]; $('k' + t).textContent = tricks[t]; }
-
-  // Trump card stays on show in the top bar for everyone
-  const shownTrump = $('trump').firstChild && $('trump').firstChild.card;
-  if (trumpCard && shownTrump !== trumpCard) {
-    $('trump').innerHTML = '';
-    const el = cardEl(trumpCard);
-    el.card = trumpCard;
-    $('trump').appendChild(el);
-  } else if (!trumpCard) {
-    $('trump').textContent = '–';
-  }
-  $('tlabel').textContent = trumpCard ? 'Trump · by ' + NAMES[chooser] : 'Trump';
-  $('rounds').textContent = 'Rounds ' + match[0] + '–' + match[1];
+  if (!V) return;
+  const lt = leftTeam(), rt = 1 - lt;
+  $('lt0').textContent = solo() ? 'Your team' : teamName(lt);
+  $('lt1').textContent = solo() ? 'Opponents' : teamName(rt);
+  $('lt0').style.color = lt === team(me) ? '#7fd6ff' : '#ff9f8a';
+  $('lt1').style.color = rt === team(me) ? '#7fd6ff' : '#ff9f8a';
+  $('t0').textContent = V.tens[lt]; $('k0').textContent = V.tricks[lt];
+  $('t1').textContent = V.tens[rt]; $('k1').textContent = V.tricks[rt];
+  $('rounds').textContent = 'Rounds ' + V.match[lt] + '–' + V.match[rt];
 
   for (let p = 0; p < 4; p++) {
-    $('s' + p).classList.toggle('dealer', p === dealer);
-    if (phase === 'play') $('s' + p).classList.toggle('active', turn === p);
-  }
-  for (const p of [1, 2, 3]) {
-    const n = hands[p].length, show = Math.min(n, 5);
-    $('n' + p).textContent = n + ' cards';
-    let backs = '';
-    for (let i = 0; i < show; i++) {
-      backs += '<div class="back" style="transform: rotate(' + ((i - (show - 1) / 2) * 12) + 'deg)"></div>';
+    const v = vp(p);
+    $('nm' + v).textContent = isYou(p) ? V.names[p] + ' (you)' : V.names[p] + (V.bots[p] ? ' 🤖' : '');
+    $('s' + v).classList.toggle('dealer', p === V.dealer);
+    $('s' + v).classList.toggle('active', V.turn >= 0 ? p === V.turn : V.dealing && p === V.dealer);
+    if (v > 0) {
+      const n = V.mine[p] ? V.hands[p].length : V.counts[p], show = Math.min(n, 5);
+      $('n' + v).textContent = n + ' cards';
+      let backs = '';
+      for (let i = 0; i < show; i++) {
+        backs += '<div class="back" style="transform: rotate(' + ((i - (show - 1) / 2) * 12) + 'deg)"></div>';
+      }
+      $('b' + v).innerHTML = backs;
     }
-    $('b' + p).innerHTML = backs;
   }
-
 
   const hand = $('hand');
   hand.innerHTML = '';
-  for (const c of hands[0]) {
+  for (const c of V.mine[me] ? V.hands[me] : []) {
     const el = cardEl(c);
-    el.onclick = () => tap(c, el);
+    el.onclick = () => tapCard(c);
     hand.appendChild(el);
-    if (c === fresh) el.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'none', opacity: 1 }],
-                                { duration: 250, easing: 'ease-out' });
+    if (fresh && same(c, fresh)) el.animate([{ transform: 'scale(.3)', opacity: 0 }, { transform: 'none', opacity: 1 }],
+                                             { duration: 250, easing: 'ease-out' });
   }
   fresh = null;
 }
+
+// ---------- Card sounds ----------
+// Built from filtered noise, the same "papery" sound real cards make
+let audio = null, noiseBuf = null, muted = false;
+try { muted = localStorage.getItem('dalcoat-mute') === '1'; } catch (e) {}
+
+function audioOn() {
+  if (!audio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    audio = new AC();
+    noiseBuf = audio.createBuffer(1, audio.sampleRate, audio.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (audio.state === 'suspended') audio.resume();
+  return audio;
+}
+document.addEventListener('pointerdown', audioOn);
+
+// One burst of noise shaped by a filter (type, start/end frequency) and a volume envelope
+function burst(at, len, vol, type, f1, f2, q = 1) {
+  const a = audio, src = a.createBufferSource(), flt = a.createBiquadFilter(), g = a.createGain();
+  src.buffer = noiseBuf;
+  flt.type = type; flt.Q.value = q;
+  flt.frequency.setValueAtTime(f1, at);
+  flt.frequency.exponentialRampToValueAtTime(f2, at + len);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + Math.min(.008, len / 4));
+  g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+  src.connect(flt); flt.connect(g); g.connect(a.destination);
+  src.start(at, Math.random() * .5, len + .05);
+}
+
+// A soft low knock, like a card landing on felt
+function thud(at, vol) {
+  const a = audio, o = a.createOscillator(), g = a.createGain();
+  o.frequency.setValueAtTime(160, at);
+  o.frequency.exponentialRampToValueAtTime(60, at + .07);
+  g.gain.setValueAtTime(vol, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + .08);
+  o.connect(g); g.connect(a.destination);
+  o.start(at); o.stop(at + .1);
+}
+
+function sound(kind) {
+  if (muted || !audioOn() || audio.state !== 'running') return;
+  const t = audio.currentTime + .005, j = () => .85 + Math.random() * .3;
+  if (kind === 'deal') {          // card sliding off the deck and through the air
+    burst(t, .09 * j(), .35, 'bandpass', 5500, 1800, .9);
+    burst(t + .07, .05, .25, 'lowpass', 2500, 900);
+  } else if (kind === 'play') {   // card slapped onto the table
+    burst(t, .06, .55, 'bandpass', 3200 * j(), 1500, .7);
+    thud(t, .35);
+  } else if (kind === 'flip') {   // card snapped face up
+    burst(t, .025, .5, 'highpass', 3000, 2500);
+    burst(t + .03, .04, .4, 'bandpass', 4200, 2200, 1.2);
+  } else if (kind === 'shuffle') { // riffle: many cards flicking past each other
+    for (let i = 0; i < 34; i++) burst(t + i * .022 + Math.random() * .008, .03, .12 + Math.random() * .15, 'bandpass', 3000 + Math.random() * 2500, 1800, 1.5);
+    burst(t + .8, .08, .4, 'lowpass', 1800, 500);   // cards squared up
+  } else if (kind === 'win' || kind === 'lose') {
+    const notes = kind === 'win' ? [523, 659, 784, 1047] : [440, 392, 349, 294];
+    notes.forEach((f, i) => {
+      const o = audio.createOscillator(), g = audio.createGain(), at = t + i * (kind === 'win' ? .12 : .2);
+      o.type = 'triangle';
+      o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(.18, at + .02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + (i === notes.length - 1 ? .9 : .3));
+      o.connect(g); g.connect(audio.destination);
+      o.start(at); o.stop(at + 1);
+    });
+  } else if (kind === 'sweep') {  // trick gathered off the table
+    burst(t, .28, .3, 'bandpass', 900, 3800, .6);
+  }
+}
+
+function toggleSound() {
+  muted = !muted;
+  try { localStorage.setItem('dalcoat-mute', muted ? '1' : '0'); } catch (e) {}
+  for (const b of document.querySelectorAll('.sndBtn')) b.textContent = muted ? '🔇' : '🔊';
+  if (!muted) sound('flip');
+}
+
+// ---------- Music ----------
+// Nepali tracks from Pixabay (free under the Pixabay Content License), kept in the music folder.
+// Menu and game each have their own playlist; tracks are picked at random.
+// In an online room the host picks, and everyone else plays the same track at the same spot.
+const TRACKS = {
+  menu: ['Folk Flute & Sarangi', 'The Spirit of the Hills', 'Himalayan Rise'],
+  game: ['Energetic Upbeat', 'High Beat Traditional', 'Beat on Madal', 'Kathmandu Reverie']
+};
+const FILES = {
+  'Folk Flute & Sarangi': 'menu-folk-flute-sarangi', 'The Spirit of the Hills': 'menu-spirit-of-the-hills',
+  'Himalayan Rise': 'menu-himalayan-rise', 'Energetic Upbeat': 'game-energetic-upbeat',
+  'High Beat Traditional': 'game-high-beat-traditional', 'Beat on Madal': 'game-madal-beat',
+  'Kathmandu Reverie': 'game-kathmandu-reverie'
+};
+const trackUrl = n => 'music/' + FILES[n] + '.mp3';
+const bgm = new Audio();
+bgm.preload = 'auto';
+let cur = null;            // { scene, idx } now playing
+let followHost = false;    // guests follow the host's music
+let musicMuted = false;
+try { musicMuted = localStorage.getItem('dalcoat-music') === '0'; } catch (e) {}
+
+function playTrack(scene, idx, pos) {
+  const name = TRACKS[scene][idx];
+  if (!name) return;
+  if (!cur || cur.scene !== scene || cur.idx !== idx) {
+    cur = { scene, idx };
+    bgm.src = trackUrl(name);
+    if (pos > 0) bgm.addEventListener('loadedmetadata', () => { bgm.currentTime = pos; }, { once: true });
+  } else if (pos !== undefined && Math.abs(bgm.currentTime - pos) > 2) {
+    bgm.currentTime = pos;      // drifted out of sync with the host
+  }
+  bgm.volume = scene === 'menu' ? .5 : .3;
+  bgm.muted = musicMuted;
+  bgm.play().catch(() => {});   // browsers wait for the first tap before playing sound
+  $('nowPlaying').textContent = '♪ Now playing: ' + name;
+}
+
+// Pick a random track (not the same one twice in a row) and tell the room
+function startMusic(scene) {
+  if (followHost) return;
+  const list = TRACKS[scene];
+  let idx = Math.floor(Math.random() * list.length);
+  if (cur && cur.scene === scene && list.length > 1 && idx === cur.idx) idx = (idx + 1) % list.length;
+  playTrack(scene, idx, 0);
+  shareMusic();
+}
+
+// Host: send the current track and position to one guest or the whole room
+function shareMusic(conn) {
+  if (!isHost || !peer || !E || !cur) return;
+  const ev = { t: 'music', scene: cur.scene, idx: cur.idx, pos: bgm.currentTime || 0 };
+  if (conn) { if (conn.open) conn.send(ev); }
+  else for (let p = 0; p < 4; p++) sendRemote(p, ev);
+}
+setInterval(() => shareMusic(), 20000);   // keep everyone lined up
+
+bgm.addEventListener('ended', () => { if (cur) startMusic(cur.scene); });
+document.addEventListener('pointerdown', () => { if (cur && bgm.paused) bgm.play().catch(() => {}); });
+
+function toggleMusic() {
+  musicMuted = !musicMuted;
+  try { localStorage.setItem('dalcoat-music', musicMuted ? '0' : '1'); } catch (e) {}
+  bgm.muted = musicMuted;
+  if (!musicMuted && bgm.paused) bgm.play().catch(() => {});
+  for (const b of document.querySelectorAll('.musBtn')) b.style.opacity = musicMuted ? .45 : 1;
+}
+
+// ---------- Menu screens ----------
+function showScreen(id) {
+  for (const s of document.querySelectorAll('.screen')) s.classList.toggle('on', s.id === id);
+}
+
+function renderLobby(ev) {
+  $('codeTiles').innerHTML = [...ev.code].map((ch, i) =>
+    '<span style="animation-delay:' + i * 70 + 'ms">' + ch + '</span>').join('');
+  const box = $('lseats');
+  box.innerHTML = '';
+  for (let p = 0; p < 4; p++) {
+    const s = ev.seats[p], v = vp(p);
+    const el = document.createElement('div');
+    el.className = 'lseat v' + v + (v % 2 ? ' red' : ' blue') + (s ? '' : ' empty') +
+                   (p === me ? ' me' : '') + (ev.fresh === p ? ' new' : '');
+    el.textContent = s ? s.name + (p === me ? ' (you)' : '') : 'Tap to sit';
+    if (!s) el.onclick = () => isHost ? moveSeat(me, p) : act({ a: 'sit', seat: p });
+    box.appendChild(el);
+  }
+  const n = ev.seats.filter(Boolean).length;
+  $('lobbyMode').textContent = n === 4 ? '👥 4 players · no bots'
+    : '👥 ' + n + ' player' + (n > 1 ? 's' : '') + ' + 🤖 ' + (4 - n) + ' bot' + (4 - n > 1 ? 's' : '');
+  $('lobbyAction').innerHTML = isHost
+    ? '<button class="btn gold" onclick="startOnline()">▶ Start game' + (n < 4 ? ' (' + (4 - n) + ' bot' + (4 - n > 1 ? 's' : '') + ')' : '') + '</button>'
+    : '<p class="dots" style="margin-top:14px">Waiting for the host to start</p>';
+}
+
+// The Nepal flag: two stacked crimson pennants with a blue border, a moon and a sun
+function nepalFlag() {
+  const star = (cx, cy, n, r1, r2) => {
+    let pts = '';
+    for (let i = 0; i < n * 2; i++) {
+      const r = i % 2 ? r2 : r1, a = Math.PI * i / n - Math.PI / 2;
+      pts += (cx + r * Math.cos(a)).toFixed(2) + ',' + (cy + r * Math.sin(a)).toFixed(2) + ' ';
+    }
+    return '<polygon fill="#fff" points="' + pts + '"/>';
+  };
+  return '<svg viewBox="0 0 100 124" width="92">' +
+    '<path d="M5,5 L90,57 L38,57 L90,119 L5,119 Z" fill="#dc143c" stroke="#003893" stroke-width="6" stroke-linejoin="miter"/>' +
+    '<circle cx="26" cy="39" r="11" fill="#fff"/><circle cx="26" cy="34" r="11" fill="#dc143c"/>' +
+    star(26, 36, 8, 5.5, 3) + star(26, 94, 12, 13, 8) + '</svg>';
+}
+
+// Stars and the flag on the main menu
+(function decorate() {
+  // DALCOAT letters drop in one by one, then bob and shine in a wave
+  [...'DALCOAT'].forEach((ch, i) => {
+    const sp = document.createElement('span');
+    sp.textContent = ch;
+    sp.style.animationDelay = (i * 110) + 'ms, ' + (1.2 + i * .14) + 's, ' + (i * .12) + 's';
+    $('title').appendChild(sp);
+  });
+  // Stars in the night sky
+  for (let i = 0; i < 70; i++) {
+    const st = document.createElement('div');
+    st.className = 'star';
+    st.style.left = Math.random() * 100 + '%';
+    st.style.top = Math.random() * 70 + '%';
+    const size = Math.random() < .15 ? 3 : Math.random() < .5 ? 2 : 1;
+    st.style.width = st.style.height = size + 'px';
+    st.style.animationDuration = 2 + Math.random() * 4 + 's';
+    st.style.animationDelay = -Math.random() * 5 + 's';
+    $('sky').appendChild(st);
+  }
+  // Waving flag: 30 strips, each one further along the wave
+  const N = 30, W = 92, sw = W / N, art = nepalFlag();
+  for (let i = 0; i < N; i++) {
+    const strip = document.createElement('div');
+    strip.className = 'strip';
+    strip.style.width = (sw + .6) + 'px';          // slight overlap hides seams
+    strip.style.marginRight = '-.6px';
+    strip.style.setProperty('--a', (i / N) * 5 + 'px');   // still at the pole, moves most at the tip
+    strip.style.animationDelay = (i * .06 - 3) + 's';
+    strip.innerHTML = '<div style="left:' + (-i * sw) + 'px">' + art + '</div>';
+    $('flag').appendChild(strip);
+  }
+  for (const b of document.querySelectorAll('.sndBtn')) b.textContent = muted ? '🔇' : '🔊';
+  try { $('name').value = localStorage.getItem('dalcoat-name') || ''; } catch (e) {}
+  for (const b of document.querySelectorAll('.musBtn')) b.style.opacity = musicMuted ? .45 : 1;
+  startMusic('menu');
+  // Opened from an invite link: fill in the room code
+  const room = new URLSearchParams(location.search).get('room');
+  if (room) { $('code').value = room.toUpperCase(); toast('Enter your name and tap Join'); }
+})();
 </script>
 </body>
 </html>
