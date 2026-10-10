@@ -410,7 +410,7 @@ button:disabled { opacity: .5; }
     </div>
     <p class="small" style="margin-top:14px">You and the player across from you are a team.</p>
     <p class="credit" id="nowPlaying"></p>
-    <p class="credit">Music: Surya_2050, Pradeep Khanal &amp; Damgaz via Pixabay</p>
+    <p class="credit">Music: Surya_2050, Pradeep Khanal &amp; Damgaz via Pixabay · v2026-10-10b</p>
   </div>
 
   <div class="screen" id="lobby">
@@ -441,6 +441,20 @@ button:disabled { opacity: .5; }
 <div id="toast"></div>
 
 <script>
+// Bump this on every update; phones running an older saved copy reload themselves
+const VERSION = '2026-10-10b';
+(async function checkForUpdate() {
+  try {
+    const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
+    const m = (await res.text()).match(/const VERSION = '([^']+)'/);
+    if (!m || m[1] === VERSION || sessionStorage.getItem('dalcoat-reloaded') === m[1]) return;
+    sessionStorage.setItem('dalcoat-reloaded', m[1]);
+    const url = new URL(location.href);
+    url.searchParams.set('v', m[1]);       // a new address skips the saved copy
+    location.replace(url);
+  } catch (e) {}
+})();
+
 const SUITS = ['♠', '♥', '♣', '♦'];
 const BOT_NAMES = ['Arjun', 'Priya', 'Rahul', 'Anita', 'Vikram', 'Meera', 'Sanjay', 'Kavya'];
 const rankName = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' })[r] || String(r);
@@ -1510,7 +1524,10 @@ function renderLobby(ev) {
     const el = document.createElement('div');
     el.className = 'lseat v' + v + (v % 2 ? ' red' : ' blue') + (s ? '' : ' empty') +
                    (p === me ? ' me' : '') + (ev.fresh === p ? ' new' : '');
-    el.textContent = s ? s.name + (p === me ? ' (you)' : '') : 'Tap to sit';
+    // An empty seat says whose partner you'd be (partners sit across from each other)
+    const mate = ev.seats[(p + 2) % 4];
+    el.textContent = s ? s.name + (p === me ? ' (you)' : '')
+                   : mate && (p + 2) % 4 !== me ? 'Sit with ' + mate.name : 'Tap to sit';
     if (!s) el.onclick = () => isHost ? moveSeat(me, p) : act({ a: 'sit', seat: p });
     box.appendChild(el);
   }
