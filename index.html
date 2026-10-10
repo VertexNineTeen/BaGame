@@ -1402,7 +1402,7 @@ function toggleSound() {
 }
 
 // ---------- Music ----------
-// Nepali tracks from Pixabay (free under the Pixabay Content License), kept in the music folder.
+// Nepali tracks from Pixabay (free under the Pixabay Content License), kept next to index.html.
 // Menu and game each have their own playlist; tracks are picked at random.
 // In an online room the host picks, and everyone else plays the same track at the same spot.
 const TRACKS = {
@@ -1415,7 +1415,7 @@ const FILES = {
   'High Beat Traditional': 'game-high-beat-traditional', 'Beat on Madal': 'game-madal-beat',
   'Kathmandu Reverie': 'game-kathmandu-reverie'
 };
-const trackUrl = n => 'music/' + FILES[n] + '.mp3';
+const trackUrl = n => FILES[n] + '.mp3';
 const bgm = new Audio();
 bgm.preload = 'auto';
 let cur = null;            // { scene, idx } now playing
