@@ -410,7 +410,7 @@ button:disabled { opacity: .5; }
     </div>
     <p class="small" style="margin-top:14px">You and the player across from you are a team.</p>
     <p class="credit" id="nowPlaying"></p>
-    <p class="credit">Music: Surya_2050, Pradeep Khanal &amp; Damgaz via Pixabay · v2026-10-10b</p>
+    <p class="credit">Music: Tunetank, SunSides &amp; AtlasAudio via Pixabay · v2026-10-10c</p>
   </div>
 
   <div class="screen" id="lobby">
@@ -442,7 +442,7 @@ button:disabled { opacity: .5; }
 
 <script>
 // Bump this on every update; phones running an older saved copy reload themselves
-const VERSION = '2026-10-10b';
+const VERSION = '2026-10-10c';
 (async function checkForUpdate() {
   try {
     const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
@@ -456,7 +456,6 @@ const VERSION = '2026-10-10b';
 })();
 
 const SUITS = ['♠', '♥', '♣', '♦'];
-const BOT_NAMES = ['Arjun', 'Priya', 'Rahul', 'Anita', 'Vikram', 'Meera', 'Sanjay', 'Kavya'];
 const rankName = r => ({ 11: 'J', 12: 'Q', 13: 'K', 14: 'A' })[r] || String(r);
 const team = p => p % 2;           // seats 0 & 2 are a team, 1 & 3 are a team
 const same = (a, b) => a.s === b.s && a.r === b.r;
@@ -834,17 +833,15 @@ function playSolo() {
   saveName();
   isHost = true;
   E = newEngine();
-  const bots = BOT_NAMES.filter(n => n !== myName()).sort(() => Math.random() - .5);
-  E.seats = [{ name: myName(), local: true }, { name: bots[0], bot: true },
-             { name: bots[1], bot: true }, { name: bots[2], bot: true }];
+  E.seats = [{ name: myName(), local: true }, { name: 'Bot 1', bot: true },
+             { name: 'Bot 2', bot: true }, { name: 'Bot 3', bot: true }];
   me = 0;
   runGame().catch(() => {});
 }
 
 function startOnline() {
-  const used = E.seats.filter(Boolean).map(s => s.name);
-  const bots = BOT_NAMES.filter(n => !used.includes(n)).sort(() => Math.random() - .5);
-  for (let p = 0; p < 4; p++) if (!E.seats[p]) E.seats[p] = { name: bots.pop(), bot: true };
+  let n = 0;
+  for (let p = 0; p < 4; p++) if (!E.seats[p]) E.seats[p] = { name: 'Bot ' + (++n), bot: true };
   runGame().catch(() => {});
 }
 
@@ -1328,7 +1325,7 @@ function render() {
 
   for (let p = 0; p < 4; p++) {
     const v = vp(p);
-    $('nm' + v).textContent = isYou(p) ? V.names[p] + ' (you)' : V.names[p] + (V.bots[p] ? ' 🤖' : '');
+    $('nm' + v).textContent = isYou(p) ? V.names[p] + ' (you)' : V.names[p] + (V.bots[p] && !/^Bot \d/.test(V.names[p]) ? ' 🤖' : '');
     $('s' + v).classList.toggle('dealer', p === V.dealer);
     $('s' + v).classList.toggle('active', V.turn >= 0 ? p === V.turn : V.dealing && p === V.dealer);
     if (v > 0) {
@@ -1439,18 +1436,16 @@ function toggleSound() {
 }
 
 // ---------- Music ----------
-// Nepali tracks from Pixabay (free under the Pixabay Content License), kept next to index.html.
+// R&B tracks from Pixabay (free under the Pixabay Content License), kept next to index.html.
 // Menu and game each have their own playlist; tracks are picked at random.
 // In an online room the host picks, and everyone else plays the same track at the same spot.
 const TRACKS = {
-  menu: ['Folk Flute & Sarangi', 'The Spirit of the Hills', 'Himalayan Rise'],
-  game: ['Energetic Upbeat', 'High Beat Traditional', 'Beat on Madal', 'Kathmandu Reverie']
+  menu: ['Neo Soul Night', 'Lounge Chill R&B', 'Smooth R&B Background'],
+  game: ['Smooth R&B Beat', 'R&B Soul Background', 'Jazzy Soul', 'RnB']
 };
 const FILES = {
-  'Folk Flute & Sarangi': 'menu-folk-flute-sarangi', 'The Spirit of the Hills': 'menu-spirit-of-the-hills',
-  'Himalayan Rise': 'menu-himalayan-rise', 'Energetic Upbeat': 'game-energetic-upbeat',
-  'High Beat Traditional': 'game-high-beat-traditional', 'Beat on Madal': 'game-madal-beat',
-  'Kathmandu Reverie': 'game-kathmandu-reverie'
+  'Neo Soul Night': 'menu-rnb-1', 'Lounge Chill R&B': 'menu-rnb-2', 'Smooth R&B Background': 'menu-rnb-3',
+  'Smooth R&B Beat': 'game-rnb-1', 'R&B Soul Background': 'game-rnb-2', 'Jazzy Soul': 'game-rnb-3', 'RnB': 'game-rnb-4'
 };
 const trackUrl = n => FILES[n] + '.mp3';
 const bgm = new Audio();
