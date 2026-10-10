@@ -39,7 +39,8 @@ body {
 /* ---------- Table ---------- */
 #table { position: relative; flex: 1; min-height: 300px; }
 /* The card table: leather rail with chrome trim, cup holders, LED strip, patterned felt */
-#tbl { position: fixed; top: 4px; bottom: 4px; left: 3px; right: 3px; pointer-events: none; z-index: 0; }
+#tbl { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+#tbl .rail, #tbl .stitch, #tbl .led, #tbl .wood, #tbl .cup { display: none; }
 #tbl .rail { position: absolute; inset: 0; border-radius: 50%; background: var(--rail);
   box-shadow: 0 0 0 3px var(--chrome), 0 0 0 5px rgba(0,0,0,.6), 0 14px 34px rgba(0,0,0,.75), 0 0 46px var(--under),
               inset 0 3px 6px rgba(255,255,255,.2), inset 0 -6px 12px rgba(0,0,0,.65); }
@@ -51,10 +52,10 @@ body {
 /* Wooden racetrack ring between the rail and the felt */
 #tbl .wood { position: absolute; inset: 21px; border-radius: 50%; background: var(--wood); display: var(--woodOn, none);
   box-shadow: inset 0 2px 4px rgba(255,255,255,.25), inset 0 -3px 6px rgba(0,0,0,.6); }
-#tbl .felt { position: absolute; inset: var(--feltInset, 21px); border-radius: 50%; background: var(--felt); overflow: hidden;
+#tbl .felt { position: absolute; inset: 0; background: var(--felt); overflow: hidden;
   box-shadow: inset 0 0 40px rgba(0,0,0,.75), inset 0 0 6px rgba(0,0,0,.9); }
 #tbl .spot { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 42%, rgba(255,255,255,.13), transparent 55%); }
-#tbl .track { position: absolute; inset: 15% 13%; border-radius: 50%; border: 2px solid var(--line);
+#tbl .track { position: absolute; inset: 14% 9% 24%; border-radius: 50%; border: 2px solid var(--line);
   background: var(--trackfill); box-shadow: 0 0 var(--lineGlow, 0) var(--line), inset 0 0 var(--lineGlow, 0) var(--line); }
 /* Centerpiece: a mandala ring with an emblem */
 #tbl .mandala { position: absolute; left: 50%; top: 45%; width: min(64vw, 300px); aspect-ratio: 1; transform: translate(-50%, -50%);
@@ -155,7 +156,7 @@ body {
   background: rgba(0,0,0,.8); border: 2px solid #ffd54a; border-radius: 14px; padding: 10px 20px;
   font-size: 20px; font-weight: 800; white-space: nowrap; opacity: 0; pointer-events: none; }
 
-#msg { position: absolute; left: 0; right: 0; bottom: 8px; text-align: center; font-size: 14px;
+#msg { position: absolute; left: 0; right: 0; bottom: 50px; text-align: center; font-size: 14px;
   padding: 0 80px; min-height: 20px; color: #ffe9a3; }
 
 /* ---------- Card faces ---------- */
@@ -391,6 +392,39 @@ button:disabled { opacity: .5; }
 #toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translateX(-50%);
   background: #222; color: #fff; padding: 10px 18px; border-radius: 12px; font-size: 14px; z-index: 30;
   box-shadow: 0 4px 14px rgba(0,0,0,.5); opacity: 0; pointer-events: none; max-width: 90vw; text-align: center; }
+
+/* ---------- Phone turned sideways ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  #bar { padding: 4px calc(16px + env(safe-area-inset-right)) 2px calc(16px + env(safe-area-inset-left)); font-size: 11px; }
+  .team b { font-size: 13px; }
+  #power { min-height: 24px; margin-bottom: 1px; }
+  #power .card { width: 18px; height: 25px; font-size: 8px; }
+  #rounds { display: none; }
+  #sndBar, #leave2, .barBtn { padding: 2px 8px; }
+  #table { min-height: 0; }
+  .seat { padding: 4px 8px; }
+  .seat .backs { display: none; }
+  #s0 { top: auto; bottom: 6px; left: calc(14px + env(safe-area-inset-left)); padding: 4px 8px; }
+  #s0 .tens { grid-template-columns: repeat(4, 22px); }
+  #s0 .tens .card { width: 22px; height: 31px; font-size: 8px; }
+  #s1 { left: calc(14px + env(safe-area-inset-left)); }
+  #s3 { right: calc(14px + env(safe-area-inset-right)); }
+  #s2 { top: 2px; }
+  #trick { top: 50%; }
+  #trick .card { width: 44px; height: 62px; font-size: 13px; }
+  #trick .p0 { left: -22px; top: 4px; }
+  #trick .p1 { left: -76px; top: -31px; }
+  #trick .p2 { left: -22px; top: -66px; }
+  #trick .p3 { left: 32px; top: -31px; }
+  #msg { bottom: 6px; padding: 0 150px; font-size: 13px; }
+  #hand { min-height: 0; flex-wrap: nowrap; gap: 4px; padding: 4px calc(10px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left)); }
+  #hand .card { width: min(46px, calc((100vw - 120px) / 13)); font-size: 13px; }
+  #spread, #banner, #shown, #tblName { top: 50%; }
+  #spread { transform: scale(.8); }
+  #tbl .mandala { width: min(40vw, 230px); top: 50%; }
+  #tbl .emblem { top: 50%; }
+  #tbl .orn { display: none; }
+}
 </style>
 </head>
 <body>
@@ -461,7 +495,7 @@ button:disabled { opacity: .5; }
     </div>
     <p class="small" style="margin-top:14px">You and the player across from you are a team.</p>
     <p class="credit" id="nowPlaying"></p>
-    <p class="credit">Music: Tunetank, SunSides &amp; AtlasAudio via Pixabay · v2026-10-10g</p>
+    <p class="credit">Music: Tunetank, SunSides &amp; AtlasAudio via Pixabay · v2026-10-10h</p>
   </div>
 
   <div class="screen" id="lobby">
@@ -493,7 +527,7 @@ button:disabled { opacity: .5; }
 
 <script>
 // Bump this on every update; phones running an older saved copy reload themselves
-const VERSION = '2026-10-10g';
+const VERSION = '2026-10-10h';
 (async function checkForUpdate() {
   try {
     const res = await fetch(location.pathname + '?check=' + Date.now(), { cache: 'no-store' });
